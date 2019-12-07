@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Cheat exposing (cheatWords)
-import Html exposing (Attribute, Html, button, div, input, li, text, ul)
+import Html exposing (Attribute, Html, button, div, input, li, map, text, ul)
 import Html.Attributes exposing (placeholder, value)
 import Html.Events exposing (keyCode, on, onClick, onInput)
 import Html.Lazy exposing (lazy2)
@@ -27,23 +27,39 @@ main =
 -- MODEL
 
 
-type alias Model =
-    { nineagram : Nineagram
+type Model
+    = CreatingPuzzle CreatingPuzzleModel
+    | SolvingPuzzle SolvingModel
+
+
+type alias CreatingPuzzleModel =
+    { typingLetters : String }
+
+
+type alias SolvingModel =
+    { puzzle : Nineagram
     , guesses : List Guess
-    , newguess : Guess
-    , newLetters : String
+    , newGuess : Guess
     , cheat : Bool
     }
 
 
 init : Model
 init =
-    { nineagram = { letters = [] }
+    CreatingPuzzle { typingLetters = "" }
+
+
+initSolving : Nineagram -> SolvingModel
+initSolving puzzle =
+    { puzzle = puzzle
     , guesses = []
-    , newguess = ""
-    , newLetters = ""
+    , newGuess = ""
     , cheat = False
     }
+
+
+type alias Puzzle =
+    { letters : List Char }
 
 
 
@@ -51,39 +67,69 @@ init =
 
 
 type Msg
+    = CreatingMsg CreatingMsg
+    | SolvingMsg SolvingMsg
+
+
+type CreatingMsg
+    = TypingLetters String
+    | CreatePuzzle String
+
+
+type SolvingMsg
     = TypingGuess String
     | SubmitGuess String
-    | TypingLetters String
-    | SubmitLetters String
     | EnableCheat
 
 
 update : Msg -> Model -> Model
 update msg model =
+    case ( msg, model ) of
+        ( CreatingMsg creatingMsg, CreatingPuzzle creatingModel ) ->
+            updateCreating creatingMsg creatingModel
+
+        ( SolvingMsg solvingMsg, SolvingPuzzle solvingModel ) ->
+            updateSolving solvingMsg solvingModel
+
+        ( _, _ ) ->
+            model
+
+
+updateCreating : CreatingMsg -> CreatingPuzzleModel -> Model
+updateCreating msg model =
+    case msg of
+        TypingLetters typed ->
+            { model | typingLetters = typed } |> CreatingPuzzle
+
+        CreatePuzzle puzzleLetters ->
+            puzzleLetters
+                |> String.toList
+                |> Nineagram
+                |> initSolving
+                |> SolvingPuzzle
+
+
+updateSolving : SolvingMsg -> SolvingModel -> Model
+updateSolving msg model =
     case msg of
         SubmitGuess newGuess ->
-            { model
-                | guesses = model.guesses ++ [ String.toLower newGuess ]
-                , newguess = ""
-            }
+            SolvingPuzzle
+                { model
+                    | guesses = model.guesses ++ [ String.toLower newGuess ]
+                    , newGuess = ""
+                }
 
         TypingGuess typing ->
-            { model | newguess = typing }
-
-        TypingLetters typing ->
-            { model | newLetters = typing }
-
-        SubmitLetters newLetters ->
-            { model | nineagram = { letters = newLetters |> String.toLower |> String.toList } }
+            SolvingPuzzle { model | newGuess = typing }
 
         EnableCheat ->
-            { model | cheat = True }
+            SolvingPuzzle { model | cheat = True }
 
 
-onEnter : Msg -> Attribute Msg
+onEnter : CreatingMsg -> Attribute CreatingMsg
 onEnter msg =
     let
-        returnMsgOnlyIfEnter : Int -> Json.Decode.Decoder Msg
+        returnMsgOnlyIfEnter : Int -> Json.Decode.Decoder CreatingMsg
         returnMsgOnlyIfEnter code =
             if code == 13 then
                 Json.Decode.succeed msg
@@ -100,7 +146,28 @@ onEnter msg =
     keyCode
         |> Json.Decode.andThen returnMsgOnlyIfEnter
         |> on "keydown"
-            
+
+
+solvingOnEnter : SolvingMsg -> Attribute SolvingMsg
+solvingOnEnter msg =
+    let
+        returnMsgOnlyIfEnter : Int -> Json.Decode.Decoder SolvingMsg
+        returnMsgOnlyIfEnter code =
+            if code == 13 then
+                Json.Decode.succeed msg
+                -- Msg -> Decoder Msg
+                -- (Decoder Msg that always returns OK Msg)
+
+            else
+                Json.Decode.fail "not ENTER"
+
+        -- String -> Decoder Msg
+        -- (Decoder Msg that always returns Err String and never Ok Msg)
+    in
+    -- Json.Decode.andThen : (a -> Decoder b) -> Decoder a -> Decoder b
+    keyCode
+        |> Json.Decode.andThen returnMsgOnlyIfEnter
+        |> on "keydown"
 
 
 
@@ -110,90 +177,97 @@ onEnter msg =
 
 view : Model -> Html Msg
 view model =
-    let
-        letters =
-            model.nineagram.letters
+    case model of
+        CreatingPuzzle creatingModel ->
+            viewCreating creatingModel
+                |> Html.map CreatingMsg
 
-        guesses =
-            model.guesses
-
-        newLetters =
-            model.newLetters
-
-        newguess =
-            model.newguess
-
-        cheat =
-            model.cheat
-
-        viewguess =
-            viewGuess model.nineagram
-
-        viewsolutions =
-            viewSolutions model.nineagram
-    in
-    case model.nineagram.letters of
-        [] ->
-            div []
-                [ div []
-                    [ input [ placeholder "Enter Nineagram letters...", onInput TypingLetters, onEnter (SubmitLetters newLetters) ] []
-                    , button [ onClick (SubmitLetters newLetters) ] [ text "Submit" ]
-                    ]
-                ]
-
-        _ ->
-            div []
-                [ div []
-                    [ input [ placeholder "Take a guess...", value newguess, onInput TypingGuess, onEnter (SubmitGuess newguess) ] []
-                    , button [ onClick (SubmitGuess newguess) ] [ text "Submit" ]
-                    ]
-                , div [] [ text (String.fromList letters) ]
-                , div []
-                    [ text "Your guesses:"
-                    , ul [] (List.map (\guess -> li [] [ viewguess guess ]) guesses)
-                    ]
-                , div []
-                    [ text "Your solutions:"
-                    , viewsolutions guesses
-                    ]
-                , div []
-                    [ text "Cheat solutions:"
-                    , lazy2 viewCheat model.nineagram cheat
-                    ]
-                ]
+        SolvingPuzzle solvingModel ->
+            viewSolving solvingModel
+                |> Html.map SolvingMsg
 
 
-viewCheat : Nineagram -> Bool -> Html Msg
+viewCreating : CreatingPuzzleModel -> Html CreatingMsg
+viewCreating model =
+    div []
+        [ div []
+            [ input [ placeholder "Enter Nineagram letters...", onInput TypingLetters, onEnter (CreatePuzzle model.typingLetters) ] []
+            , button [ onClick (CreatePuzzle model.typingLetters) ] [ text "Submit" ]
+            ]
+        ]
+
+
+viewSolving : SolvingModel -> Html SolvingMsg
+viewSolving model =
+    div []
+        [ div []
+            [ input [ placeholder "Take a guess...", value model.newGuess, onInput TypingGuess, solvingOnEnter (SubmitGuess model.newGuess) ] []
+            , button [ onClick (SubmitGuess model.newGuess) ] [ text "Submit" ]
+            ]
+        , div [] [ text (String.fromList model.puzzle.letters) ]
+        , div []
+            [ text "Your guesses:"
+            , ul [] (List.map (\guess -> li [] [ viewGuess model.puzzle guess ]) model.guesses)
+            ]
+        , div []
+            [ text "Your solutions:"
+            , viewSolutions model.puzzle model.guesses
+            ]
+        , div []
+            [ text "Cheat solutions:"
+            , lazy2 viewCheat model.puzzle model.cheat
+            ]
+        ]
+
+
+viewCheat : Nineagram -> Bool -> Html SolvingMsg
 viewCheat nineagram cheat =
     case cheat of
         False ->
-            button [ onClick EnableCheat ] [ text "Show" ]
+            button
+                [ onClick EnableCheat ] 
+                [ text "Show" ]
 
         True ->
-            viewSolutions nineagram cheatWords
+            let
+                viewAllSolutions =
+                    viewSolutions nineagram
+
+            in
+                viewAllSolutions cheatWords
+            
 
 
-viewSolutions : Nineagram -> List Guess -> Html Msg
+viewSolutions : Nineagram -> List Guess -> Html SolvingMsg
 viewSolutions nineagram guesses =
-    ul []
-        (guesses
-            |> List.map
-                (\guess ->
-                    case validateGuess nineagram guess of
-                        ValidGuess _ ->
-                            if guess |> hasSolutions nineagram guesses then
-                                li [] [ text (guess ++ " (" ++ (guess |> solutions nineagram guesses |> String.join ", ") ++ ")") ]
+    let
+        validate guess = 
+            validateGuess nineagram guess
 
-                            else
-                                text ""
+        hasSolutions guess = 
+            Nineagram.hasSolutions nineagram guesses guess
 
-                        InvalidGuess ->
-                            text ""
-                )
-        )
+        solutions guess =
+            Nineagram.solutions nineagram guesses guess
+
+        viewGuessWithSolutions guess =
+            case validate guess of
+                ValidGuess _ ->
+                    if hasSolutions guess then
+                        li [] [ text (guess ++ " (" ++ (solutions guess |> String.join ", ") ++ ")") ]
+
+                    else
+                        text ""
+
+                InvalidGuess ->
+                    text ""
+    in
+    guesses
+        |> List.map viewGuessWithSolutions
+        |> ul [] 
 
 
-viewGuess : Nineagram -> Guess -> Html msg
+viewGuess : Nineagram -> Guess -> Html SolvingMsg
 viewGuess nineagram guess =
     case validateGuess nineagram guess of
         InvalidGuess ->
