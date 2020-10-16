@@ -1,10 +1,10 @@
-module Nineagram exposing (Guess, Nineagram, ValidatedGuess(..), hasSolutions, solutions, validateGuess)
+module Nineagram exposing (Guess, Nineagram, ValidatedGuess(..), hasSolutions, removeLetters, solutions, validateGuess, isSolution)
 
 -- EXPOSED
 
 
 type alias Nineagram =
-    { letters : List Char }
+    List Char
 
 
 type alias Guess =
@@ -32,7 +32,7 @@ isSolution nineagram guess otherguess =
         False
 
     else
-        case nineagram.letters |> removeLetters (String.toList guess) of
+        case nineagram |> removeLetters (String.toList guess) of
             Nothing ->
                 False
 
@@ -48,13 +48,31 @@ isSolution nineagram guess otherguess =
                         False
 
 
+validateGuess : Nineagram -> Guess -> ValidatedGuess
+validateGuess nineagram guess =
+    let
+        remaining =
+            remainingLetters nineagram
+    in
+    if List.length (String.toList guess) /= 5 then
+        InvalidGuess
+
+    else
+        case remaining guess of
+            Nothing ->
+                InvalidGuess
+
+            Just letters ->
+                ValidGuess letters
+
+
 
 -- PRIVATE
 
 
 remainingLetters : Nineagram -> Guess -> Maybe (List Char)
 remainingLetters nineagram guess =
-    removeLetters (String.toList guess) nineagram.letters
+    removeLetters (String.toList guess) nineagram
 
 
 removeLetters : List Char -> List Char -> Maybe (List Char)
@@ -88,25 +106,7 @@ removeLetter letter input =
                         Nothing
 
                     Just remainingInput ->
-                        Just ([ x ] ++ remainingInput)
-
-
-validateGuess : Nineagram -> Guess -> ValidatedGuess
-validateGuess nineagram guess =
-    let
-        remaining =
-            remainingLetters nineagram
-    in
-    if List.length (String.toList guess) /= 5 then
-        InvalidGuess
-
-    else
-        case remaining guess of
-            Nothing ->
-                InvalidGuess
-
-            Just letters ->
-                ValidGuess letters
+                        Just (x :: remainingInput)
 
 
 getMiddleLetter : Guess -> List Char
