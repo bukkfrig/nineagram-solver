@@ -212,11 +212,6 @@ viewSolving model =
     case model.puzzle of
         ValidPuzz letters ->
             let
-                lets =
-                    case letters of
-                        PuzzleLetters x ->
-                            List.map Char.toLower x
-
                 cheatButton =
                     button [ onClick EnableCheat ] [ text "Cheat" ]
             in
@@ -226,7 +221,7 @@ viewSolving model =
                 , div [ class "cheat" ]
                     [ text "All solutions:"
                     , if model.cheat then
-                        viewCheat Cheat.cheatWords lets
+                        lazy2 viewSolutions letters Cheat.cheatWords
 
                       else
                         cheatButton
@@ -235,12 +230,6 @@ viewSolving model =
 
         InvalidPuzzle ->
             text ""
-
-
-viewCheat : List Guess -> Nineagram -> Html SolvingMsg
-viewCheat cheatWords nineagram =
-    lazy2 viewSolutions nineagram cheatWords
-
 
 type Puzz
     = ValidPuzz PuzzleLetters
@@ -303,9 +292,14 @@ viewNineagram puzzleLetters currentGuess =
         ]
 
 
-viewSolutions : Nineagram -> List Guess -> Html SolvingMsg
-viewSolutions nineagram guesses =
+viewSolutions : PuzzleLetters -> List Guess -> Html SolvingMsg
+viewSolutions puzzleLetters guesses =
     let
+        nineagram =
+            case puzzleLetters of
+                PuzzleLetters x ->
+                    List.map Char.toLower x
+                    
         validate guess =
             validateGuess nineagram guess
 
