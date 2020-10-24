@@ -1,6 +1,4 @@
-module Nineagram exposing (Guess, NineagramPuzzle, ValidatedGuess(..), fromString, getLetters, guessToString, hasSolutions, isSolution, remainingLetters, solutions, stringToGuess, validateGuess)
-
--- EXPOSED
+module Nineagram exposing (Guess, NineagramPuzzle, fromCharList, fromString, getLetters, guessToString, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions, stringToGuess)
 
 
 type NineagramPuzzle
@@ -52,11 +50,6 @@ guessToString (Guess s) =
     s
 
 
-type ValidatedGuess
-    = ValidGuess (List Char)
-    | InvalidGuess
-
-
 hasSolutions : NineagramPuzzle -> List Guess -> Guess -> Bool
 hasSolutions nineagram earlierGuesses guess =
     earlierGuesses |> List.any (\earlierGuess -> guess |> isSolution nineagram earlierGuess)
@@ -64,12 +57,12 @@ hasSolutions nineagram earlierGuesses guess =
 
 solutions : NineagramPuzzle -> List Guess -> Guess -> List Guess
 solutions nineagram guesses guess =
-    guesses |> List.filter (\otherguess -> guess |> isSolution nineagram otherguess)
+    guesses |> List.filter (isSolution nineagram guess)
 
 
 isSolution : NineagramPuzzle -> Guess -> Guess -> Bool
 isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
-    if guessToString guess == guessToString otherGuess || getMiddleLetter guess /= getMiddleLetter otherGuess then
+    if getMiddleLetter guess /= getMiddleLetter otherGuess then
         False
 
     else
@@ -89,31 +82,18 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
                         False
 
 
-validateGuess : NineagramPuzzle -> Guess -> ValidatedGuess
-validateGuess nineagram guess =
-    let
-        lowerCaseGuess =
-            case guess of
-                Guess g ->
-                    String.toLower g
-
-        remaining =
-            remainingLetters nineagram
-    in
-    if List.length (String.toList lowerCaseGuess) /= 5 then
-        InvalidGuess
+isValidGuess : NineagramPuzzle -> Guess -> Bool
+isValidGuess nineagram guess =
+    if (guess |> guessToString |> String.length) /= 5 then
+        False
 
     else
-        case remaining guess of
+        case remainingLetters nineagram guess of
             Nothing ->
-                InvalidGuess
+                False
 
             Just letters ->
-                ValidGuess (String.toList lowerCaseGuess)
-
-
-
--- PRIVATE
+                True
 
 
 remainingLetters : NineagramPuzzle -> Guess -> Maybe (List Char)

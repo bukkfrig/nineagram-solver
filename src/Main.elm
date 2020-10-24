@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, href, map, placeholder, src, value)
 import Html.Events exposing (keyCode, on, onClick, onInput)
 import Html.Lazy exposing (lazy)
 import Json.Decode
-import Nineagram exposing (Guess, NineagramPuzzle, ValidatedGuess(..), fromString, getLetters, guessToString, remainingLetters, stringToGuess, validateGuess)
+import Nineagram exposing (Guess, NineagramPuzzle, fromString, getLetters, guessToString, isValidGuess, remainingLetters, stringToGuess)
 
 
 
@@ -237,7 +237,9 @@ viewCheatSolutions : NineagramPuzzle -> Html SolvingMsg
 viewCheatSolutions puzzle =
     let
         cheatGuesses =
-            Cheat.cheatWords |> List.filterMap stringToGuess
+            Cheat.cheatWords 
+                |> List.filterMap stringToGuess
+                |> List.filter (isValidGuess puzzle)
     in
     viewSolutions puzzle cheatGuesses
 
@@ -290,22 +292,20 @@ viewNineagram puzzle currentGuess =
 viewSolutions : NineagramPuzzle -> List Guess -> Html SolvingMsg
 viewSolutions puzzle guesses =
     let
-        hasSolutions guess =
-            Nineagram.hasSolutions puzzle guesses guess
+        hasSolutions =
+            Nineagram.hasSolutions puzzle guesses
 
-        solutions guess =
-            Nineagram.solutions puzzle guesses guess
+        solutions =
+            Nineagram.solutions puzzle guesses
+
+        isValid = 
+            Nineagram.isValidGuess puzzle
 
         viewSolutionsForGuess guess =
-            case Nineagram.validateGuess puzzle guess of
-                ValidGuess _ ->
-                    if hasSolutions guess then
-                        li [] [ text (guessToString guess ++ " (" ++ (solutions guess |> List.map guessToString |> String.join ", ") ++ ")") ]
+            if isValid guess && hasSolutions guess then
+                li [] [ text (guessToString guess ++ " (" ++ (solutions guess |> List.map guessToString |> String.join ", ") ++ ")") ]
 
-                    else
-                        text ""
-
-                InvalidGuess ->
-                    text ""
+            else
+                text ""
     in
     ul [] <| List.map viewSolutionsForGuess guesses
