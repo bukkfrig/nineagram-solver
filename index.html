@@ -1,13 +1,82 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="nineagram.css" type="text/css">
-    </head>
-    <body>
-        <div id="app"></div>
-        <script src="elm.js"></script>
-        <script>
-            Elm.Main.init({node: document.getElementById('app')})
-        </script>
-    </body>
+
+<head>
+    <style>
+        div.nineagram {
+            width: max-content;
+            background-color: ghostwhite;
+            text-align: center;
+            padding: 5px;
+            margin: 5px;
+            float: left;
+            position: relative;
+        }
+
+        div.delete-icon {
+            position: absolute;
+            right: 0px;
+            height: 40px;
+            width: 40px;
+            padding: 5px;
+            margin: 5px;
+            opacity: 50%;
+        }
+
+        div.shuffle-icon {
+            position: absolute;
+            right: 0px;
+            bottom: 0px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        div.solution {
+            background-color: honeydew;
+        }
+
+        div.solution>div.letterbox {
+            border-color: seagreen;
+        }
+
+        div.letterbox {
+            text-align: center;
+            line-height: 40px;
+            height: 40px;
+            width: 40px;
+            border-color: lightslategrey;
+            border-style: solid;
+            border-width: 2px;
+            margin: 4px 2px;
+            display: inline-block;
+            background-color: white;
+
+        }
+
+        input.letter {
+            line-height: 40px;
+            width: 40px;
+            text-align: center;
+            border-style: none;
+            background: none;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: large;
+            color: #444;
+        }
+
+        div.cheat {
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="elm.js"></script>
+    <script>
+        Elm.Main.init({ node: document.getElementById('app') })
+    </script>
+</body>
+
 </html>
