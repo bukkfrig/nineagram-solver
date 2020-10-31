@@ -2,9 +2,9 @@ module Main exposing (main)
 
 import Browser
 import Cheat exposing (cheatWords)
-import Html exposing (Attribute, Html, a, br, button, div, img, input, li, map, text, ul)
-import Html.Attributes exposing (class, href, map, placeholder, src, value)
-import Html.Events exposing (keyCode, on, onClick, onInput)
+import Html exposing (Attribute, Html, a, br, button, div, form, img, input, li, map, text, ul)
+import Html.Attributes exposing (class, href, map, placeholder, src, value, style)
+import Html.Events exposing (keyCode, on, onClick, onInput, onSubmit)
 import Html.Lazy exposing (lazy)
 import Json.Decode
 import Nineagram exposing (Guess, NineagramPuzzle, fromString, getLetters, guessToString, isSolution, isValidGuess, remainingLetters, stringToGuess)
@@ -82,7 +82,8 @@ type Msg
 
 
 type CreatingMsg
-    = Keyed Char
+    = TypedLetters String
+    | SubmitLetters
 
 
 type SolvingMsg
@@ -117,32 +118,21 @@ backspace =
 
 updateCreating : CreatingMsg -> CreatingPuzzleModel -> Model
 updateCreating msg model =
-    let
-        enter =
-            13
-    in
     case msg of
-        Keyed char ->
-            if Char.isAlpha char then
-                CreatingPuzzle { model | letters = String.toList model.letters ++ [ char ] |> String.fromList }
+        TypedLetters letters ->
+            CreatingPuzzle { model | letters = letters |> String.toUpper }
 
-            else if Char.toCode char == backspace then
-                CreatingPuzzle { model | letters = String.toList model.letters |> List.take (String.length model.letters - 1) |> String.fromList }
+        SubmitLetters ->
+            let
+                maybePuzzle =
+                    Nineagram.fromString model.letters
+            in
+            case maybePuzzle of
+                Just puzzle ->
+                    SolvingPuzzle (initSolving puzzle)
 
-            else if Char.toCode char == enter then
-                let
-                    maybePuzzle =
-                        Nineagram.fromString model.letters
-                in
-                case maybePuzzle of
-                    Just puzzle ->
-                        SolvingPuzzle (initSolving puzzle)
-
-                    Nothing ->
-                        CreatingPuzzle model
-
-            else
-                CreatingPuzzle model
+                Nothing ->
+                    CreatingPuzzle model
 
 
 updateSolving : SolvingMsg -> SolvingModel -> Model
@@ -162,7 +152,6 @@ updateSolving msg model =
                 Just newGuess ->
                     if isValidGuess model.puzzle newGuess then
                         case model.currentAttempt of
-
                             OneGuess firstGuess ->
                                 let
                                     newAttempt =
@@ -222,15 +211,14 @@ onKeyHandler =
         keyCodeDecoder =
             Html.Events.keyCode
 
-        chooseMessage: Int -> Json.Decode.Decoder SolvingMsg
+        chooseMessage : Int -> Json.Decode.Decoder SolvingMsg
         chooseMessage code =
             let
                 enter =
                     13
-                
+
                 escape =
                     27
-                
             in
             if code == enter then
                 Json.Decode.succeed SubmitAttempt
@@ -259,27 +247,12 @@ view model =
             Html.map SolvingMsg <| viewSolving solvingModel
 
 
-getChar : (Char -> msg) -> Int -> Json.Decode.Decoder msg
-getChar msgConstructor code =
-    Json.Decode.succeed <| msgConstructor (Char.fromCode code)
-
-
 viewCreating : CreatingPuzzleModel -> Html CreatingMsg
 viewCreating model =
-    let
-        letters =
-            case model.letters of
-                "" ->
-                    [ ' ' ]
-
-                _ ->
-                    String.toList model.letters
-    in
-    div
-        [ on "keydown" (keyCode |> Json.Decode.andThen (getChar Keyed))
-        , Html.Attributes.tabindex 0
-        ]
-        [ div [] (letters |> List.map (\char -> div [ class "letterbox" ] [ text (String.fromChar char) ]))
+    form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
+        [ text "Enter puzzle letters"
+        , br [] []
+        , input [ onInput TypedLetters, style "font-family" "Courier New, monospace", placeholder "e.g. AEEHPPRSS", value model.letters ] [ ]
         ]
 
 
