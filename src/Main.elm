@@ -123,15 +123,12 @@ updateCreating msg model =
             CreatingPuzzle { model | letters = letters |> String.toUpper }
 
         SubmitLetters ->
-            let
-                maybePuzzle =
-                    Nineagram.fromString model.letters
-            in
-            case maybePuzzle of
-                Just puzzle ->
+
+            case Nineagram.fromString model.letters of
+                Ok puzzle ->
                     SolvingPuzzle (initSolving puzzle)
 
-                Nothing ->
+                Err problems ->
                     CreatingPuzzle model
 
 
@@ -146,10 +143,10 @@ updateSolving msg model =
 
         SubmitAttempt ->
             case stringToGuess model.typingGuess of
-                Nothing ->
+                Err problems ->
                     SolvingPuzzle model
 
-                Just newGuess ->
+                Ok newGuess ->
                     if isValidGuess model.puzzle newGuess then
                         case model.currentAttempt of
                             OneGuess firstGuess ->
@@ -304,7 +301,7 @@ viewCheatSolutions puzzle =
     let
         cheatGuesses =
             Cheat.cheatWords
-                |> List.filterMap stringToGuess
+                |> List.filterMap (Result.toMaybe << stringToGuess)
                 |> List.filter (isValidGuess puzzle)
     in
     viewSolutions puzzle cheatGuesses

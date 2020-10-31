@@ -1,26 +1,90 @@
-module Nineagram exposing (Guess, NineagramPuzzle, fromCharList, fromString, getLetters, guessToString, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions, stringToGuess)
+module Nineagram exposing (CreationProblem(..), Guess, GuessProblem(..), NineagramPuzzle, fromCharList, fromString, getLetters, guessToString, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions, stringToGuess)
 
 
 type NineagramPuzzle
     = NineagramPuzzle (List Char)
 
 
-fromCharList : List Char -> Maybe NineagramPuzzle
+fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
 fromCharList letters =
     let
-        lowerCaseLetters =
-            letters |> List.map Char.toLower
+        problems =
+            []
+                ++ (case List.filter (\c -> not <| Char.isAlpha c) letters of
+                        [] ->
+                            []
+
+                        nonAlphaCharacters ->
+                            [ ContainsNonAlphaCharacters nonAlphaCharacters ]
+                    -- <| "that's got a '" ++ String.fromChar firstNonLetter ++ "' and your puzzle should only have letters." ]
+                   )
+                ++ (let
+                        length =
+                            List.length letters
+                    in
+                    if length == 0 then
+                        [ IsEmpty ]
+
+                    else if length < 9 then
+                        [ LettersTooFew length ]
+                        -- <| "that's only " ++ apaStyleNumber length ++ " letters, and a puzzle should have exactly nine letters." ]
+
+                    else if length > 9 then
+                        [ LettersTooMany length ]
+                        -- <| "that's " ++ apaStyleNumber length ++ " letters, and a puzzle should have exactly nine letters." ]
+
+                    else
+                        []
+                   )
     in
-    if List.all Char.isAlpha letters && List.length letters == 9 then
-        Just <| NineagramPuzzle lowerCaseLetters
+    case problems of
+        [] ->
+            Ok <| NineagramPuzzle <| List.map Char.toLower letters
 
-    else
-        Nothing
+        _ ->
+            Err problems
 
 
-fromString : String -> Maybe NineagramPuzzle
+apaStyleNumber : Int -> String
+apaStyleNumber n =
+    case n of
+        1 ->
+            "one"
+
+        2 ->
+            "two"
+
+        3 ->
+            "three"
+
+        4 ->
+            "four"
+
+        5 ->
+            "five"
+
+        6 ->
+            "six"
+
+        7 ->
+            "seven"
+
+        8 ->
+            "eight"
+
+        9 ->
+            "nine"
+
+        _ ->
+            String.fromInt n
+
+
+fromString : String -> Result (List CreationProblem) NineagramPuzzle
 fromString letters =
-    String.toList letters |> fromCharList
+    letters
+        |> String.trim
+        |> String.toList
+        |> fromCharList
 
 
 getLetters : NineagramPuzzle -> List Char
@@ -32,17 +96,33 @@ type Guess
     = Guess String
 
 
-stringToGuess : String -> Maybe Guess
+type CreationProblem
+    = ContainsNonAlphaCharacters (List Char)
+    | LettersTooFew Int
+    | LettersTooMany Int
+    | IsEmpty
+
+
+type GuessProblem
+    = GuessTooShort
+    | GuessTooLong
+
+
+stringToGuess : String -> Result (List GuessProblem) Guess
 stringToGuess guess =
     let
         lowerCaseGuess =
             guess |> String.toLower
     in
-    if String.length guess == 5 then
-        Just <| Guess lowerCaseGuess
+    -- "Your guess should be exactly five letters." ]
+    if String.length guess < 5 then
+        Err [ GuessTooShort ]
+
+    else if String.length guess > 5 then
+        Err [ GuessTooLong ]
 
     else
-        Nothing
+        Ok <| Guess lowerCaseGuess
 
 
 guessToString : Guess -> String
