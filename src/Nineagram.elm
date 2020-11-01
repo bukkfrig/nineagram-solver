@@ -16,17 +16,14 @@ fromCharList letters =
                         [] ->
                             []
 
-                        nonAlphaCharacters ->
-                            [ ContainsNonAlphaCharacters nonAlphaCharacters ]
+                        x :: xs ->
+                            [ ContainsNonAlphaCharacters x xs ]
                    )
                 ++ (let
                         length =
                             List.length letters
                     in
-                    if length == 0 then
-                        [ IsEmpty ]
-
-                    else if length < 9 then
+                    if length < 9 then
                         [ LettersTooFew length ]
 
                     else if length > 9 then
@@ -44,40 +41,6 @@ fromCharList letters =
             Err problems
 
 
-apaStyleNumber : Int -> String
-apaStyleNumber n =
-    case n of
-        1 ->
-            "one"
-
-        2 ->
-            "two"
-
-        3 ->
-            "three"
-
-        4 ->
-            "four"
-
-        5 ->
-            "five"
-
-        6 ->
-            "six"
-
-        7 ->
-            "seven"
-
-        8 ->
-            "eight"
-
-        9 ->
-            "nine"
-
-        _ ->
-            String.fromInt n
-
-
 fromString : String -> Result (List CreationProblem) NineagramPuzzle
 fromString letters =
     letters
@@ -91,11 +54,12 @@ getLetters (NineagramPuzzle letters) =
     letters
 
 
+{-| Reason why a Nineagram isn't valid from the supplied List Char.
+-}
 type CreationProblem
-    = ContainsNonAlphaCharacters (List Char)
+    = ContainsNonAlphaCharacters Char (List Char)
     | LettersTooFew Int
     | LettersTooMany Int
-    | IsEmpty
 
 
 hasSolutions : NineagramPuzzle -> List Guess -> Guess -> Bool

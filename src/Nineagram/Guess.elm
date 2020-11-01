@@ -12,10 +12,6 @@ type Problem
 
 fromString : String -> Result (List Problem) Guess
 fromString guess =
-    let
-        lowerCaseGuess =
-            guess |> String.toLower
-    in
     if String.length guess < 5 then
         Err [ GuessTooShort ]
 
@@ -23,7 +19,7 @@ fromString guess =
         Err [ GuessTooLong ]
 
     else
-        Ok <| Guess lowerCaseGuess
+        Ok <| Guess <| String.toLower guess
 
 
 toString : Guess -> String

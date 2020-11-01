@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, href, map, placeholder, src, style, valu
 import Html.Events exposing (keyCode, on, onClick, onInput, onSubmit)
 import Html.Lazy exposing (lazy)
 import Json.Decode
-import Nineagram exposing (NineagramPuzzle, fromString, getLetters, isSolution, isValidGuess, remainingLetters)
+import Nineagram exposing (CreationProblem(..), NineagramPuzzle, fromString, getLetters, isSolution, isValidGuess, remainingLetters)
 import Nineagram.Guess exposing (Guess)
 
 
@@ -34,7 +34,9 @@ type Model
 
 
 type alias CreatingPuzzleModel =
-    { letters : String }
+    { letters : String
+    , problems : List CreationProblem
+    }
 
 
 type alias SolvingModel =
@@ -49,7 +51,10 @@ type alias SolvingModel =
 
 init : Model
 init =
-    CreatingPuzzle { letters = "" }
+    CreatingPuzzle
+        { letters = ""
+        , problems = []
+        }
 
 
 initSolving : NineagramPuzzle -> SolvingModel
@@ -129,7 +134,7 @@ updateCreating msg model =
                     SolvingPuzzle (initSolving puzzle)
 
                 Err problems ->
-                    CreatingPuzzle model
+                    CreatingPuzzle { model | problems = problems }
 
 
 updateSolving : SolvingMsg -> SolvingModel -> Model
@@ -247,10 +252,52 @@ view model =
 viewCreating : CreatingPuzzleModel -> Html CreatingMsg
 viewCreating model =
     form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
-        [ text "Enter puzzle letters"
-        , br [] []
-        , input [ onInput TypedLetters, style "font-family" "Courier New, monospace", placeholder "e.g. AEEHPPRSS", value model.letters ] []
+        [ div [ style "margin" "10px" ]
+            [ text "Enter puzzle letters"
+            , br [] []
+            , input
+                [ onInput TypedLetters
+                , style "font-family" "Courier New, monospace"
+                , placeholder "e.g. AEEHPPRSS"
+                , value model.letters
+                ]
+                []
+            ]
+        , div [ style "margin" "10px" ] [ viewCreationProblems model.problems ]
         ]
+
+
+viewCreationProblems : List CreationProblem -> Html CreatingMsg
+viewCreationProblems problems =
+    let
+        displayProblem : CreationProblem -> Maybe String
+        displayProblem problem =
+            case problem of
+                LettersTooFew 0 ->
+                    Nothing
+
+                LettersTooFew n ->
+                    Just <| "that's only " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
+
+                LettersTooMany n ->
+                    Just <| "that's " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
+
+                ContainsNonAlphaCharacters first _ ->
+                    Just <| "that's got a '" ++ String.fromChar first ++ "', and a puzzle should only have letters."
+    in
+    case List.filterMap displayProblem problems of
+        [] ->
+            text ""
+
+        [ message ] ->
+            div []
+                [ text <| "Sorry, but " ++ message ]
+
+        messages ->
+            div []
+                [ text "Sorry, but"
+                , ul [] <| List.map (\message -> li [] [ text message ]) messages
+                ]
 
 
 viewSolving : SolvingModel -> Html SolvingMsg
