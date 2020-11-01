@@ -1,4 +1,6 @@
-module Nineagram exposing (CreationProblem(..), Guess, GuessProblem(..), NineagramPuzzle, fromCharList, fromString, getLetters, guessToString, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions, stringToGuess)
+module Nineagram exposing (CreationProblem(..), NineagramPuzzle, fromCharList, fromString, getLetters, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions)
+
+import Nineagram.Guess exposing (Guess, Problem(..), fromString, toString)
 
 
 type NineagramPuzzle
@@ -16,7 +18,6 @@ fromCharList letters =
 
                         nonAlphaCharacters ->
                             [ ContainsNonAlphaCharacters nonAlphaCharacters ]
-                    -- <| "that's got a '" ++ String.fromChar firstNonLetter ++ "' and your puzzle should only have letters." ]
                    )
                 ++ (let
                         length =
@@ -27,11 +28,9 @@ fromCharList letters =
 
                     else if length < 9 then
                         [ LettersTooFew length ]
-                        -- <| "that's only " ++ apaStyleNumber length ++ " letters, and a puzzle should have exactly nine letters." ]
 
                     else if length > 9 then
                         [ LettersTooMany length ]
-                        -- <| "that's " ++ apaStyleNumber length ++ " letters, and a puzzle should have exactly nine letters." ]
 
                     else
                         []
@@ -92,42 +91,11 @@ getLetters (NineagramPuzzle letters) =
     letters
 
 
-type Guess
-    = Guess String
-
-
 type CreationProblem
     = ContainsNonAlphaCharacters (List Char)
     | LettersTooFew Int
     | LettersTooMany Int
     | IsEmpty
-
-
-type GuessProblem
-    = GuessTooShort
-    | GuessTooLong
-
-
-stringToGuess : String -> Result (List GuessProblem) Guess
-stringToGuess guess =
-    let
-        lowerCaseGuess =
-            guess |> String.toLower
-    in
-    -- "Your guess should be exactly five letters." ]
-    if String.length guess < 5 then
-        Err [ GuessTooShort ]
-
-    else if String.length guess > 5 then
-        Err [ GuessTooLong ]
-
-    else
-        Ok <| Guess lowerCaseGuess
-
-
-guessToString : Guess -> String
-guessToString (Guess s) =
-    s
 
 
 hasSolutions : NineagramPuzzle -> List Guess -> Guess -> Bool
@@ -146,12 +114,12 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
         False
 
     else
-        case removeLetters puzzleLetters (guess |> guessToString |> String.toList) of
+        case removeLetters puzzleLetters (guess |> Nineagram.Guess.toString |> String.toList) of
             Nothing ->
                 False
 
             Just letters ->
-                case removeLetters letters (otherGuess |> guessToString |> String.toList |> removeMiddleLetter) of
+                case removeLetters letters (otherGuess |> Nineagram.Guess.toString |> String.toList |> removeMiddleLetter) of
                     Nothing ->
                         False
 
@@ -164,7 +132,7 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
 
 isValidGuess : NineagramPuzzle -> Guess -> Bool
 isValidGuess nineagram guess =
-    if (guess |> guessToString |> String.length) /= 5 then
+    if (guess |> Nineagram.Guess.toString |> String.length) /= 5 then
         False
 
     else
@@ -177,8 +145,8 @@ isValidGuess nineagram guess =
 
 
 remainingLetters : NineagramPuzzle -> Guess -> Maybe (List Char)
-remainingLetters (NineagramPuzzle puzzleLetters) (Guess guess) =
-    removeLetters puzzleLetters (String.toList guess)
+remainingLetters (NineagramPuzzle puzzleLetters) guess =
+    removeLetters puzzleLetters (String.toList <| Nineagram.Guess.toString guess)
 
 
 removeLetters : List Char -> List Char -> Maybe (List Char)
@@ -216,8 +184,9 @@ removeLetter input letter =
 
 
 getMiddleLetter : Guess -> List Char
-getMiddleLetter (Guess guess) =
+getMiddleLetter guess =
     guess
+        |> Nineagram.Guess.toString
         |> String.toList
         |> List.take 3
         |> List.drop 2

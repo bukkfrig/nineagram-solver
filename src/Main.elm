@@ -3,11 +3,12 @@ module Main exposing (main)
 import Browser
 import Cheat exposing (cheatWords)
 import Html exposing (Attribute, Html, a, br, button, div, form, img, input, li, map, text, ul)
-import Html.Attributes exposing (class, href, map, placeholder, src, value, style)
+import Html.Attributes exposing (class, href, map, placeholder, src, style, value)
 import Html.Events exposing (keyCode, on, onClick, onInput, onSubmit)
 import Html.Lazy exposing (lazy)
 import Json.Decode
-import Nineagram exposing (Guess, NineagramPuzzle, fromString, getLetters, guessToString, isSolution, isValidGuess, remainingLetters, stringToGuess)
+import Nineagram exposing (NineagramPuzzle, fromString, getLetters, isSolution, isValidGuess, remainingLetters)
+import Nineagram.Guess exposing (Guess)
 
 
 
@@ -123,7 +124,6 @@ updateCreating msg model =
             CreatingPuzzle { model | letters = letters |> String.toUpper }
 
         SubmitLetters ->
-
             case Nineagram.fromString model.letters of
                 Ok puzzle ->
                     SolvingPuzzle (initSolving puzzle)
@@ -142,7 +142,7 @@ updateSolving msg model =
                 }
 
         SubmitAttempt ->
-            case stringToGuess model.typingGuess of
+            case Nineagram.Guess.fromString model.typingGuess of
                 Err problems ->
                     SolvingPuzzle model
 
@@ -249,7 +249,7 @@ viewCreating model =
     form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
         [ text "Enter puzzle letters"
         , br [] []
-        , input [ onInput TypedLetters, style "font-family" "Courier New, monospace", placeholder "e.g. AEEHPPRSS", value model.letters ] [ ]
+        , input [ onInput TypedLetters, style "font-family" "Courier New, monospace", placeholder "e.g. AEEHPPRSS", value model.letters ] []
         ]
 
 
@@ -285,13 +285,13 @@ viewAttempt attempt =
 
         OneGuess guess ->
             li []
-                [ div [ onClick (SelectAttempt attempt) ] [ text <| guessToString guess ++ " - " ]
+                [ div [ onClick (SelectAttempt attempt) ] [ text <| Nineagram.Guess.toString guess ++ " - " ]
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
             li []
-                [ div [ onClick (SelectAttempt attempt) ] [ text <| guessToString firstGuess ++ " - " ++ guessToString secondGuess ]
+                [ div [ onClick (SelectAttempt attempt) ] [ text <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ]
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 
@@ -301,7 +301,7 @@ viewCheatSolutions puzzle =
     let
         cheatGuesses =
             Cheat.cheatWords
-                |> List.filterMap (Result.toMaybe << stringToGuess)
+                |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
                 |> List.filter (isValidGuess puzzle)
     in
     viewSolutions puzzle cheatGuesses
@@ -362,7 +362,7 @@ viewNineagramOneGuess puzzle guess =
                     []
 
         letter n =
-            (List.repeat (String.length (guessToString guess)) ' ' ++ remain)
+            (List.repeat (String.length (Nineagram.Guess.toString guess)) ' ' ++ remain)
                 |> List.take n
                 |> List.drop (n - 1)
                 |> String.fromList
@@ -370,7 +370,7 @@ viewNineagramOneGuess puzzle guess =
 
         guessLetter n =
             guess
-                |> guessToString
+                |> Nineagram.Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
@@ -402,7 +402,7 @@ viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
 
         firstGuessLetter n =
             firstGuess
-                |> guessToString
+                |> Nineagram.Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
@@ -411,7 +411,7 @@ viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
 
         secondGuessLetter n =
             secondGuess
-                |> guessToString
+                |> Nineagram.Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
@@ -449,7 +449,7 @@ viewSolutions puzzle guesses =
 
         viewSolutionsForGuess guess =
             if isValid guess && hasSolutions guess then
-                li [] [ text (guessToString guess ++ " (" ++ (solutions guess |> List.map guessToString |> String.join ", ") ++ ")") ]
+                li [] [ text (Nineagram.Guess.toString guess ++ " (" ++ (solutions guess |> List.map Nineagram.Guess.toString |> String.join ", ") ++ ")") ]
 
             else
                 text ""
