@@ -1,4 +1,9 @@
-module Nineagram.Guess exposing (Guess, Problem(..), fromString, toString)
+module Nineagram.Guess exposing
+    ( Guess
+    , Problem(..)
+    , fromString
+    , toString
+    )
 
 
 type Guess

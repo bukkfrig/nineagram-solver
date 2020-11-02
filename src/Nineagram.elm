@@ -1,6 +1,17 @@
-module Nineagram exposing (CreationProblem(..), NineagramPuzzle, fromCharList, fromString, getLetters, hasSolutions, isSolution, isValidGuess, remainingLetters, solutions)
+module Nineagram exposing
+    ( CreationProblem(..)
+    , NineagramPuzzle
+    , fromCharList
+    , fromString
+    , getLetters
+    , hasSolutions
+    , isSolution
+    , isValidGuess
+    , remainingLetters
+    , solutions
+    )
 
-import Nineagram.Guess exposing (Guess, Problem(..), fromString, toString)
+import Nineagram.Guess exposing (Guess)
 
 
 type NineagramPuzzle

@@ -1,13 +1,13 @@
 module Main exposing (main)
 
 import Browser
-import Cheat exposing (cheatWords)
-import Html exposing (Attribute, Html, a, br, button, div, form, img, input, li, map, text, ul)
-import Html.Attributes exposing (class, href, map, placeholder, src, style, value)
-import Html.Events exposing (keyCode, on, onClick, onInput, onSubmit)
-import Html.Lazy exposing (lazy)
+import Cheat
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Html.Lazy
 import Json.Decode
-import Nineagram exposing (CreationProblem(..), NineagramPuzzle, fromString, getLetters, isSolution, isValidGuess, remainingLetters)
+import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess exposing (Guess)
 
 
@@ -28,6 +28,12 @@ main =
 -- MODEL
 
 
+type Attempt
+    = NoGuesses
+    | OneGuess Guess
+    | TwoGuesses Guess Guess
+
+
 type Model
     = CreatingPuzzle CreatingPuzzleModel
     | SolvingPuzzle SolvingModel
@@ -35,7 +41,7 @@ type Model
 
 type alias CreatingPuzzleModel =
     { letters : String
-    , problems : List CreationProblem
+    , problems : List Nineagram.CreationProblem
     }
 
 
@@ -70,12 +76,6 @@ initSolving puzzle =
     , typingGuess = ""
     , cheat = False
     }
-
-
-type Attempt
-    = NoGuesses
-    | OneGuess Guess
-    | TwoGuesses Guess Guess
 
 
 
@@ -117,11 +117,6 @@ update msg model =
             model
 
 
-backspace : Int
-backspace =
-    8
-
-
 updateCreating : CreatingMsg -> CreatingPuzzleModel -> Model
 updateCreating msg model =
     case msg of
@@ -152,12 +147,12 @@ updateSolving msg model =
                     SolvingPuzzle model
 
                 Ok newGuess ->
-                    if isValidGuess model.puzzle newGuess then
+                    if Nineagram.isValidGuess model.puzzle newGuess then
                         case model.currentAttempt of
                             OneGuess firstGuess ->
                                 let
                                     newAttempt =
-                                        if isSolution model.puzzle firstGuess newGuess then
+                                        if Nineagram.isSolution model.puzzle firstGuess newGuess then
                                             TwoGuesses firstGuess newGuess
 
                                         else
@@ -251,7 +246,7 @@ view model =
 
 viewCreating : CreatingPuzzleModel -> Html CreatingMsg
 viewCreating model =
-    form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
+    Html.form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
         [ div [ style "margin" "10px" ]
             [ text "Enter puzzle letters"
             , br [] []
@@ -267,22 +262,22 @@ viewCreating model =
         ]
 
 
-viewCreationProblems : List CreationProblem -> Html CreatingMsg
+viewCreationProblems : List Nineagram.CreationProblem -> Html CreatingMsg
 viewCreationProblems problems =
     let
-        displayProblem : CreationProblem -> Maybe String
+        displayProblem : Nineagram.CreationProblem -> Maybe String
         displayProblem problem =
             case problem of
-                LettersTooFew 0 ->
+                Nineagram.LettersTooFew 0 ->
                     Nothing
 
-                LettersTooFew n ->
+                Nineagram.LettersTooFew n ->
                     Just <| "that's only " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
 
-                LettersTooMany n ->
+                Nineagram.LettersTooMany n ->
                     Just <| "that's " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
 
-                ContainsNonAlphaCharacters first _ ->
+                Nineagram.ContainsNonAlphaCharacters first _ ->
                     Just <| "that's got a '" ++ String.fromChar first ++ "', and a puzzle should only have letters."
     in
     case List.filterMap displayProblem problems of
@@ -313,7 +308,7 @@ viewSolving model =
         , div [ class "cheat" ]
             [ text "All solutions:"
             , if model.cheat then
-                lazy viewCheatSolutions model.puzzle
+                Html.Lazy.lazy viewCheatSolutions model.puzzle
 
               else
                 cheatButton
@@ -349,7 +344,7 @@ viewCheatSolutions puzzle =
         cheatGuesses =
             Cheat.cheatWords
                 |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
-                |> List.filter (isValidGuess puzzle)
+                |> List.filter (Nineagram.isValidGuess puzzle)
     in
     viewSolutions puzzle cheatGuesses
 
@@ -371,7 +366,7 @@ viewNineagramNoGuesses : NineagramPuzzle -> Html SolvingMsg
 viewNineagramNoGuesses puzzle =
     let
         letter n =
-            getLetters puzzle
+            Nineagram.getLetters puzzle
                 |> List.take n
                 |> List.drop (n - 1)
                 |> String.fromList
@@ -401,7 +396,7 @@ viewNineagramOneGuess : NineagramPuzzle -> Guess -> Html SolvingMsg
 viewNineagramOneGuess puzzle guess =
     let
         remain =
-            case remainingLetters puzzle guess of
+            case Nineagram.remainingLetters puzzle guess of
                 Just r ->
                     r
 
