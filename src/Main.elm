@@ -396,12 +396,8 @@ viewNineagramOneGuess : NineagramPuzzle -> Guess -> Html SolvingMsg
 viewNineagramOneGuess puzzle guess =
     let
         remain =
-            case Nineagram.remainingLetters puzzle guess of
-                Just r ->
-                    r
-
-                Nothing ->
-                    []
+            Nineagram.remainingLetters puzzle guess
+                |> Maybe.withDefault []
 
         letter n =
             (List.repeat (String.length (Nineagram.Guess.toString guess)) ' ' ++ remain)
