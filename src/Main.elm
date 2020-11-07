@@ -11,10 +11,6 @@ import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess exposing (Guess)
 
 
-
--- MAIN
-
-
 main : Program () Model Msg
 main =
     Browser.sandbox
@@ -34,19 +30,10 @@ type Attempt
     | TwoGuesses Guess Guess
 
 
-type Model
-    = CreatingPuzzle CreatingPuzzleModel
-    | SolvingPuzzle SolvingModel
-
-
-type alias CreatingPuzzleModel =
+type alias Model =
     { letters : String
     , problems : List Nineagram.CreationProblem
-    }
-
-
-type alias SolvingModel =
-    { puzzle : NineagramPuzzle
+    , puzzle : Maybe NineagramPuzzle
     , attempts : List Attempt
     , currentAttempt : Attempt
     , defaultAttempt : Attempt
@@ -57,22 +44,12 @@ type alias SolvingModel =
 
 init : Model
 init =
-    CreatingPuzzle
-        { letters = ""
-        , problems = []
-        }
-
-
-initSolving : NineagramPuzzle -> SolvingModel
-initSolving puzzle =
-    let
-        emptyAttempt =
-            NoGuesses
-    in
-    { puzzle = puzzle
-    , attempts = [ emptyAttempt ]
-    , currentAttempt = emptyAttempt
-    , defaultAttempt = emptyAttempt
+    { letters = ""
+    , problems = []
+    , puzzle = Nothing
+    , attempts = []
+    , currentAttempt = NoGuesses
+    , defaultAttempt = NoGuesses
     , typingGuess = ""
     , cheat = False
     }
@@ -83,18 +60,11 @@ initSolving puzzle =
 
 
 type Msg
-    = CreatingMsg CreatingMsg
-    | SolvingMsg SolvingMsg
-
-
-type CreatingMsg
-    = TypedLetters String
-    | SubmitLetters
-
-
-type SolvingMsg
-    = TypingGuess String
-    | SubmitAttempt
+    = TypedPuzzleLetters String
+    | SubmittedPuzzleLetters
+    | Reset
+    | TypingGuess String
+    | SubmitAttempt NineagramPuzzle
     | SelectAttempt Attempt
     | SelectDefaultAttempt
     | DeleteAttempt Attempt
@@ -103,112 +73,93 @@ type SolvingMsg
 
 update : Msg -> Model -> Model
 update msg model =
-    case ( msg, model ) of
-        ( CreatingMsg creatingMsg, CreatingPuzzle creatingModel ) ->
-            updateCreating creatingMsg creatingModel
-
-        ( SolvingMsg solvingMsg, SolvingPuzzle solvingModel ) ->
-            updateSolving solvingMsg solvingModel
-
-        ( CreatingMsg _, _ ) ->
-            model
-
-        ( SolvingMsg _, _ ) ->
-            model
-
-
-updateCreating : CreatingMsg -> CreatingPuzzleModel -> Model
-updateCreating msg model =
     case msg of
-        TypedLetters letters ->
-            CreatingPuzzle { model | letters = letters |> String.toUpper }
+        TypedPuzzleLetters letters ->
+            { model | letters = letters |> String.toUpper }
 
-        SubmitLetters ->
+        SubmittedPuzzleLetters ->
             case Nineagram.fromString model.letters of
                 Ok puzzle ->
-                    SolvingPuzzle (initSolving puzzle)
+                    { init
+                        | puzzle = Just puzzle
+                        , attempts = []
+                        , letters = String.toUpper model.letters
+                    }
 
                 Err problems ->
-                    CreatingPuzzle { model | problems = problems }
+                    { model | problems = problems }
 
-
-updateSolving : SolvingMsg -> SolvingModel -> Model
-updateSolving msg model =
-    case msg of
         TypingGuess typing ->
-            SolvingPuzzle
-                { model
-                    | typingGuess = typing
-                }
+            { model | typingGuess = String.toUpper typing }
 
-        SubmitAttempt ->
+        SubmitAttempt puzzle ->
             case Nineagram.Guess.fromString model.typingGuess of
                 Err problems ->
-                    SolvingPuzzle model
+                    model
 
                 Ok newGuess ->
-                    if Nineagram.isValidGuess model.puzzle newGuess then
+                    if not <| Nineagram.isValidGuess puzzle newGuess then
+                        model
+
+                    else
                         case model.currentAttempt of
                             OneGuess firstGuess ->
                                 let
                                     newAttempt =
-                                        if Nineagram.isSolution model.puzzle firstGuess newGuess then
+                                        if Nineagram.isSolution puzzle firstGuess newGuess then
                                             TwoGuesses firstGuess newGuess
 
                                         else
                                             OneGuess newGuess
                                 in
-                                SolvingPuzzle
-                                    { model
-                                        | attempts = model.attempts ++ [ newAttempt ]
-                                        , currentAttempt = newAttempt
-                                        , typingGuess = ""
-                                    }
+                                { model
+                                    | attempts = model.attempts ++ [ newAttempt ]
+                                    , currentAttempt = newAttempt
+                                    , typingGuess = ""
+                                }
 
                             _ ->
                                 let
                                     newAttempt =
                                         OneGuess newGuess
                                 in
-                                SolvingPuzzle
-                                    { model
-                                        | attempts = model.attempts ++ [ newAttempt ]
-                                        , currentAttempt = newAttempt
-                                        , typingGuess = ""
-                                    }
-
-                    else
-                        SolvingPuzzle model
+                                { model
+                                    | attempts = model.attempts ++ [ newAttempt ]
+                                    , currentAttempt = newAttempt
+                                    , typingGuess = ""
+                                }
 
         SelectAttempt attempt ->
-            SolvingPuzzle { model | currentAttempt = attempt }
+            { model | currentAttempt = attempt }
 
         DeleteAttempt attempt ->
-            SolvingPuzzle
-                { model
-                    | attempts = model.attempts |> List.filter (\a -> a /= attempt)
-                    , currentAttempt =
-                        if model.currentAttempt == attempt then
-                            model.defaultAttempt
+            { model
+                | attempts = model.attempts |> List.filter (\a -> a /= attempt)
+                , currentAttempt =
+                    if model.currentAttempt == attempt then
+                        model.defaultAttempt
 
-                        else
-                            model.currentAttempt
-                }
+                    else
+                        model.currentAttempt
+            }
 
         EnableCheat ->
-            SolvingPuzzle { model | cheat = True }
+            { model | cheat = True }
 
         SelectDefaultAttempt ->
-            SolvingPuzzle { model | currentAttempt = model.defaultAttempt }
+            { model | currentAttempt = model.defaultAttempt }
+
+        Reset ->
+            init
 
 
-onKeyHandler : Attribute SolvingMsg
-onKeyHandler =
+onKeyHandler : NineagramPuzzle -> Attribute Msg
+onKeyHandler puzzle =
     let
         keyCodeDecoder =
             Html.Events.keyCode
 
-        chooseMessage : Int -> Json.Decode.Decoder SolvingMsg
+        chooseMessage : Int -> Json.Decode.Decoder Msg
         chooseMessage code =
             let
                 enter =
@@ -218,7 +169,7 @@ onKeyHandler =
                     27
             in
             if code == enter then
-                Json.Decode.succeed SubmitAttempt
+                Json.Decode.succeed <| SubmitAttempt puzzle
 
             else if code == escape then
                 Json.Decode.succeed SelectDefaultAttempt
@@ -236,33 +187,56 @@ onKeyHandler =
 
 view : Model -> Html Msg
 view model =
-    case model of
-        CreatingPuzzle creatingModel ->
-            Html.map CreatingMsg <| viewCreating creatingModel
-
-        SolvingPuzzle solvingModel ->
-            Html.map SolvingMsg <| viewSolving solvingModel
-
-
-viewCreating : CreatingPuzzleModel -> Html CreatingMsg
-viewCreating model =
-    Html.form [ onSubmit SubmitLetters, style "font-family" "Helvetica, Arial, sans-serif" ]
-        [ div [ style "margin" "10px" ]
-            [ text "Enter puzzle letters"
-            , br [] []
-            , input
-                [ onInput TypedLetters
-                , style "font-family" "Courier New, monospace"
-                , placeholder "e.g. AEEHPPRSS"
-                , value model.letters
+    let
+        puzzle =
+            Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
+    in
+    div [ style "font-family" "Helvetica, Arial, sans-serif", style "font-size" "small" ]
+        [ Html.form [ onSubmit SubmittedPuzzleLetters ]
+            [ div []
+                [ label [ for "puzzleLetters" ] [ text "Puzzle letters" ]
+                , br [] []
+                , input
+                    [ id "puzzleLetters"
+                    , onInput TypedPuzzleLetters
+                    , style "font-family" "Consolas, monospace"
+                    , value model.letters
+                    , disabled (model.puzzle /= Nothing)
+                    ]
+                    []
+                , button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
+                , button [ onClick Reset, type_ "button" ] [ text "Clear" ]
                 ]
-                []
             ]
         , div [ style "margin" "10px" ] [ viewCreationProblems model.problems ]
+        , div [ onKeyHandler puzzle ]
+            [ div [] [ viewNineagram puzzle model.currentAttempt ]
+            , input
+                [ disabled (model.puzzle == Nothing)
+                , value model.typingGuess
+                , onInput TypingGuess
+                , placeholder "Guess..."
+                ]
+                []
+            , div [] <| List.map viewAttempt (NoGuesses :: model.attempts)
+            , div [ class "cheat" ]
+                [ text "All solutions:"
+                , if model.cheat then
+                    Html.Lazy.lazy viewCheatSolutions puzzle
+
+                  else
+                    button
+                        [ type_ "button"
+                        , onClick EnableCheat
+                        , disabled (model.puzzle == Nothing)
+                        ]
+                        [ text "Cheat" ]
+                ]
+            ]
         ]
 
 
-viewCreationProblems : List Nineagram.CreationProblem -> Html CreatingMsg
+viewCreationProblems : List Nineagram.CreationProblem -> Html Msg
 viewCreationProblems problems =
     let
         displayProblem : Nineagram.CreationProblem -> Maybe String
@@ -272,73 +246,39 @@ viewCreationProblems problems =
                     Nothing
 
                 Nineagram.LettersTooFew n ->
-                    Just <| "that's only " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
+                    Just <| "That's only " ++ String.fromInt n ++ " letters. A puzzle should have exactly nine letters."
 
                 Nineagram.LettersTooMany n ->
-                    Just <| "that's " ++ String.fromInt n ++ " letters, and a puzzle should have exactly nine letters."
+                    Just <| "That's " ++ String.fromInt n ++ " letters. A puzzle should have exactly nine letters."
 
                 Nineagram.ContainsNonAlphaCharacters first _ ->
-                    Just <| "that's got a '" ++ String.fromChar first ++ "', and a puzzle should only have letters."
+                    Just <| "That's got a '" ++ String.fromChar first ++ "'. A puzzle should only have letters."
     in
-    case List.filterMap displayProblem problems of
-        [] ->
-            text ""
-
-        [ message ] ->
-            div []
-                [ text <| "Sorry, but " ++ message ]
-
-        messages ->
-            div []
-                [ text "Sorry, but"
-                , ul [] <| List.map (\message -> li [] [ text message ]) messages
-                ]
+    List.filterMap displayProblem problems
+        |> List.map (\message -> div [] [ text message ])
+        |> div [ style "color" "red", style "font-size" "x-small" ]
 
 
-viewSolving : SolvingModel -> Html SolvingMsg
-viewSolving model =
-    let
-        cheatButton =
-            button [ onClick EnableCheat ] [ text "Cheat" ]
-    in
-    div [ onKeyHandler ]
-        [ div [] [ viewNineagram model.puzzle model.currentAttempt ]
-        , input [ value model.typingGuess, onInput TypingGuess, placeholder "Guess..." ] []
-        , ul [] <| List.map viewAttempt model.attempts
-        , div [ class "cheat" ]
-            [ text "All solutions:"
-            , if model.cheat then
-                Html.Lazy.lazy viewCheatSolutions model.puzzle
-
-              else
-                cheatButton
-            ]
-        ]
-
-
-viewAttempt : Attempt -> Html SolvingMsg
+viewAttempt : Attempt -> Html Msg
 viewAttempt attempt =
     case attempt of
         NoGuesses ->
-            li []
-                [ div [ onClick (SelectAttempt attempt) ] [ text "New attempt" ]
-                , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
-                ]
+            div [ onClick (SelectAttempt attempt) ] [ i [] [ text "New word" ] ]
 
         OneGuess guess ->
-            li []
-                [ div [ onClick (SelectAttempt attempt) ] [ text <| Nineagram.Guess.toString guess ++ " - " ]
+            div [ onClick (SelectAttempt attempt) ]
+                [ text <| Nineagram.Guess.toString guess ++ " - "
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
-            li []
-                [ div [ onClick (SelectAttempt attempt) ] [ text <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ]
+            div [ onClick (SelectAttempt attempt) ]
+                [ text <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ++ " "
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 
 
-viewCheatSolutions : NineagramPuzzle -> Html SolvingMsg
+viewCheatSolutions : NineagramPuzzle -> Html Msg
 viewCheatSolutions puzzle =
     let
         cheatGuesses =
@@ -349,7 +289,7 @@ viewCheatSolutions puzzle =
     viewSolutions puzzle cheatGuesses
 
 
-viewNineagram : NineagramPuzzle -> Attempt -> Html SolvingMsg
+viewNineagram : NineagramPuzzle -> Attempt -> Html Msg
 viewNineagram puzzle attempt =
     case attempt of
         NoGuesses ->
@@ -362,7 +302,7 @@ viewNineagram puzzle attempt =
             viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess )
 
 
-viewNineagramNoGuesses : NineagramPuzzle -> Html SolvingMsg
+viewNineagramNoGuesses : NineagramPuzzle -> Html Msg
 viewNineagramNoGuesses puzzle =
     let
         letter n =
@@ -392,7 +332,7 @@ viewNineagramNoGuesses puzzle =
         ]
 
 
-viewNineagramOneGuess : NineagramPuzzle -> Guess -> Html SolvingMsg
+viewNineagramOneGuess : NineagramPuzzle -> Guess -> Html Msg
 viewNineagramOneGuess puzzle guess =
     let
         remain =
@@ -432,7 +372,7 @@ viewNineagramOneGuess puzzle guess =
         ]
 
 
-viewNineagramTwoGuesses : NineagramPuzzle -> ( Guess, Guess ) -> Html SolvingMsg
+viewNineagramTwoGuesses : NineagramPuzzle -> ( Guess, Guess ) -> Html Msg
 viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
     let
         letter n =
@@ -473,7 +413,7 @@ viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
         ]
 
 
-viewSolutions : NineagramPuzzle -> List Guess -> Html SolvingMsg
+viewSolutions : NineagramPuzzle -> List Guess -> Html Msg
 viewSolutions puzzle guesses =
     let
         hasSolutions =

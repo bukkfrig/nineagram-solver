@@ -9,6 +9,7 @@ module Nineagram exposing
     , isValidGuess
     , remainingLetters
     , solutions
+    , defaultPuzzle
     )
 
 import Nineagram.Guess exposing (Guess)
@@ -16,6 +17,9 @@ import Nineagram.Guess exposing (Guess)
 
 type NineagramPuzzle
     = NineagramPuzzle (List Char)
+
+defaultPuzzle: NineagramPuzzle
+defaultPuzzle = NineagramPuzzle <| String.toList "GRNAMNIEA"
 
 
 fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
