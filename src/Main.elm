@@ -192,30 +192,41 @@ view model =
             Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
     in
     div [ style "font-family" "Helvetica, Arial, sans-serif", style "font-size" "small" ]
-        [ Html.form [ onSubmit SubmittedPuzzleLetters ]
-            [ div []
-                [ label [ for "puzzleLetters" ] [ text "Puzzle letters" ]
-                , br [] []
-                , input
-                    [ id "puzzleLetters"
-                    , onInput TypedPuzzleLetters
-                    , style "font-family" "Consolas, monospace"
-                    , value model.letters
-                    , disabled (model.puzzle /= Nothing)
+        [ div []
+            [ Html.form [ class "puzzleform", onSubmit SubmittedPuzzleLetters ]
+                [ div [ class "lettersInput" ]
+                    [ label [ for "puzzleLetters", style "margin" "10px" ] [ b [] [ text "Enter Nineagram" ] ]
+                    , br [] []
+                    , input
+                        [ id "puzzleLetters"
+                        , class "lettersInput"
+                        , onInput TypedPuzzleLetters
+                        , spellcheck False
+                        , autocomplete False
+                        , value model.letters
+                        , disabled (model.puzzle /= Nothing)
+                        ]
+                        []
+                    , div [] [ viewCreationProblems model.problems ]
                     ]
-                    []
-                , button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
-                , button [ onClick Reset, type_ "button" ] [ text "Clear" ]
+                , div []
+                    [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
+                    ]
+                , div []
+                    [ button [ onClick Reset, type_ "button" ] [ text "Clear" ]
+                    ]
                 ]
             ]
-        , div [ style "margin" "10px" ] [ viewCreationProblems model.problems ]
-        , div [ onKeyHandler puzzle ]
+        , div [ onKeyHandler puzzle, style "border-style" "solid", style "width" "300px", style "padding" "10px", style "border-radius" "10px", style "height" "500px", style "overflow-y" "auto" ]
             [ div [] [ viewNineagram puzzle model.currentAttempt ]
+            , label [ for "guess" ] [ text "Guess a word: " ]
+            , br [] []
             , input
-                [ disabled (model.puzzle == Nothing)
+                [ name "guess"
+                , spellcheck False
+                , disabled (model.puzzle == Nothing)
                 , value model.typingGuess
                 , onInput TypingGuess
-                , placeholder "Guess..."
                 ]
                 []
             , div [] <| List.map viewAttempt (NoGuesses :: model.attempts)
@@ -233,6 +244,7 @@ view model =
                         [ text "Cheat" ]
                 ]
             ]
+            , h1 [] [ text "Nineagram Solver" ]
         ]
 
 
@@ -256,7 +268,7 @@ viewCreationProblems problems =
     in
     List.filterMap displayProblem problems
         |> List.map (\message -> div [] [ text message ])
-        |> div [ style "color" "red", style "font-size" "x-small" ]
+        |> div [ style "color" "red", style "font-size" "x-small", style "width" "max-content" ]
 
 
 viewAttempt : Attempt -> Html Msg

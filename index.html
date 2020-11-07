@@ -2,7 +2,38 @@
 <html>
 
 <head>
+    <title>Nineagram Solver</title>
+    <link rel=icon href=favicon.ico/>
+    <meta name=viewport content=width=device-width, initial-scale=1.0>
     <style>
+
+        h1 {
+            margin: 10px inherit inherit inherit;
+        }
+
+        div.lettersInput {
+            height: 80px;
+        }
+
+        form.puzzleform {
+            height: 120px; 
+            border-style: none;
+            width: 300px;  
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        input.lettersInput { 
+            font-family: Consolas, monospace;
+            font-size: large;
+            font-weight: bold;
+            letter-spacing: 3px;
+            border-style: solid;
+            border-radius: 10px;
+            width: max-content;
+            padding: 5px;
+        }
+
         div.nineagram {
             width: max-content;
             background-color: ghostwhite;
@@ -34,7 +65,7 @@
             background-color: honeydew;
         }
 
-        div.solution>div.letterbox {
+        div.solution > div.letterbox {
             border-color: seagreen;
         }
 
@@ -63,16 +94,12 @@
             font-size: large;
             color: #444;
         }
-
-        div.cheat {
-            clear: both;
-        }
     </style>
 </head>
 
 <body>
-    <div id="app"></div>
-    <script src="elm.js"></script>
+    <div id=app></div>
+    <script src=elm.js></script>
     <script>
         Elm.Main.init({ node: document.getElementById('app') })
     </script>
