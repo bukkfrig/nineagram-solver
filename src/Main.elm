@@ -113,7 +113,7 @@ update msg model =
                                             OneGuess newGuess
                                 in
                                 { model
-                                    | attempts = model.attempts ++ [ newAttempt ]
+                                    | attempts = [ newAttempt ] ++ model.attempts
                                     , currentAttempt = newAttempt
                                     , typingGuess = ""
                                 }
@@ -124,7 +124,7 @@ update msg model =
                                         OneGuess newGuess
                                 in
                                 { model
-                                    | attempts = model.attempts ++ [ newAttempt ]
+                                    | attempts = [ newAttempt ] ++ model.attempts
                                     , currentAttempt = newAttempt
                                     , typingGuess = ""
                                 }
@@ -195,7 +195,7 @@ view model =
         [ div []
             [ Html.form [ class "puzzleform", onSubmit SubmittedPuzzleLetters ]
                 [ div [ class "lettersInput" ]
-                    [ label [ for "puzzleLetters", style "margin" "10px" ] [ b [] [ text "Enter Nineagram" ] ]
+                    [ label [ for "puzzleLetters", style "margin" "10px" ] [ b [] [ text "Letters of your Nineagram" ] ]
                     , br [] []
                     , input
                         [ id "puzzleLetters"
@@ -217,19 +217,23 @@ view model =
                     ]
                 ]
             ]
-        , div [ onKeyHandler puzzle, style "border-style" "solid", style "width" "300px", style "padding" "10px", style "border-radius" "10px", style "height" "500px", style "overflow-y" "auto" ]
+        , div [ onKeyHandler puzzle, style "border-style" "solid", style "width" "280px", style "padding" "10px", style "border-radius" "10px", style "height" "500px", style "overflow-y" "auto" ]
             [ div [] [ viewNineagram puzzle model.currentAttempt ]
-            , label [ for "guess" ] [ text "Guess a word: " ]
-            , br [] []
-            , input
-                [ name "guess"
-                , spellcheck False
-                , disabled (model.puzzle == Nothing)
-                , value model.typingGuess
-                , onInput TypingGuess
+            , Html.form [ onSubmit <| SubmitAttempt puzzle ]
+                [ label [ for "guess" ] [ text "Guess a word" ]
+                , br [] []
+                , input
+                    [ name "guess"
+                    , class "lettersInput"
+                    , spellcheck False
+                    , disabled (model.puzzle == Nothing)
+                    , value model.typingGuess
+                    , onInput TypingGuess
+                    ]
+                    []
+                , button [] [ text "Guess" ]
                 ]
-                []
-            , div [] <| List.map viewAttempt (NoGuesses :: model.attempts)
+            , div [] <| List.map (viewAttempt puzzle) model.attempts
             , div [ class "cheat" ]
                 [ text "All solutions:"
                 , if model.cheat then
@@ -244,7 +248,7 @@ view model =
                         [ text "Cheat" ]
                 ]
             ]
-            , h1 [] [ text "Nineagram Solver" ]
+        , h1 [] [ text "Nineagram Solver" ]
         ]
 
 
@@ -271,21 +275,33 @@ viewCreationProblems problems =
         |> div [ style "color" "red", style "font-size" "x-small", style "width" "max-content" ]
 
 
-viewAttempt : Attempt -> Html Msg
-viewAttempt attempt =
+viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
+viewAttempt puzzle attempt =
     case attempt of
         NoGuesses ->
-            div [ onClick (SelectAttempt attempt) ] [ i [] [ text "New word" ] ]
+            div [ class "attempt", class "noguesses", onClick (SelectAttempt attempt) ] [ i [] [ text "New word" ] ]
 
         OneGuess guess ->
-            div [ onClick (SelectAttempt attempt) ]
-                [ text <| Nineagram.Guess.toString guess ++ " - "
+            let
+                remaining =
+                    Nineagram.remainingLetters puzzle guess
+                        |> Maybe.map String.fromList
+                        |> Maybe.withDefault ""
+
+                middleLetter =
+                    guess |> Nineagram.Guess.toString |> String.left 3 |> String.right 1
+            in
+            div [ class "attempt", class "oneguess", onClick (SelectAttempt attempt) ]
+                [ b [] [ text <| String.toUpper <| Nineagram.Guess.toString guess ++ " - " ]
+                , text <| String.toUpper <| String.left 2 remaining
+                , b [] [ text <| String.toUpper <| middleLetter ]
+                , text <| String.toUpper <| String.right 2 remaining
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
-            div [ onClick (SelectAttempt attempt) ]
-                [ text <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ++ " "
+            div [ class "attempt", class "twoguesses", onClick (SelectAttempt attempt) ]
+                [ b [] [ text <| String.toUpper <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ]
                 , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
                 ]
 

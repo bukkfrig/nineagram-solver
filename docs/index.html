@@ -3,10 +3,9 @@
 
 <head>
     <title>Nineagram Solver</title>
-    <link rel=icon href=favicon.ico/>
+    <link rel=icon href=favicon.ico />
     <meta name=viewport content=width=device-width, initial-scale=1.0>
     <style>
-
         h1 {
             margin: 10px inherit inherit inherit;
         }
@@ -16,31 +15,31 @@
         }
 
         form.puzzleform {
-            height: 120px; 
-            border-style: none;
-            width: 300px;  
             border-radius: 10px;
+            border-style: none;
+            height: 120px;
             padding: 10px;
+            width: 300px;
         }
 
-        input.lettersInput { 
+        input.lettersInput {
+            border-radius: 10px;
+            border-style: solid;
             font-family: Consolas, monospace;
             font-size: large;
             font-weight: bold;
             letter-spacing: 3px;
-            border-style: solid;
-            border-radius: 10px;
-            width: max-content;
             padding: 5px;
+            width: max-content;
         }
 
         div.nineagram {
-            width: max-content;
             background-color: ghostwhite;
-            text-align: center;
-            padding: 5px;
             margin: 5px;
+            padding: 5px;
             position: relative;
+            text-align: center;
+            width: max-content;
         }
 
         div.delete-icon {
@@ -65,7 +64,7 @@
             background-color: honeydew;
         }
 
-        div.solution > div.letterbox {
+        div.solution>div.letterbox {
             border-color: seagreen;
         }
 
@@ -94,6 +93,25 @@
             font-size: large;
             color: #444;
         }
+
+        div.attempt {
+            width: 200px;
+            border-style: solid;
+            border-radius: 10px;
+            font-family: Consolas, monospace;
+            margin: 5px;
+            padding: 5px;
+        }
+        
+        div.oneguess {
+            letter-spacing: 5px;
+        }
+
+        div.twoguesses {
+            letter-spacing: 5px;
+            background: honeydew;
+        }
+
     </style>
 </head>
 
