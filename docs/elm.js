@@ -12170,6 +12170,7 @@ var $author$project$Main$view = function (model) {
 									[
 										$elm$html$Html$Attributes$name('guess'),
 										$elm$html$Html$Attributes$class('lettersInput'),
+										$elm$html$Html$Attributes$autocomplete(false),
 										$elm$html$Html$Attributes$spellcheck(false),
 										$elm$html$Html$Attributes$disabled(
 										_Utils_eq(model.puzzle, $elm$core$Maybe$Nothing)),

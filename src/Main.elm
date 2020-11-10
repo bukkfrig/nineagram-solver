@@ -225,6 +225,7 @@ view model =
                 , input
                     [ name "guess"
                     , class "lettersInput"
+                    , autocomplete False
                     , spellcheck False
                     , disabled (model.puzzle == Nothing)
                     , value model.typingGuess
