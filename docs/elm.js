@@ -12127,13 +12127,7 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$author$project$Main$onKeyHandler(puzzle),
-						A2($elm$html$Html$Attributes$style, 'border-style', 'solid'),
-						A2($elm$html$Html$Attributes$style, 'width', '280px'),
-						A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-						A2($elm$html$Html$Attributes$style, 'border-radius', '10px'),
-						A2($elm$html$Html$Attributes$style, 'height', '500px'),
-						A2($elm$html$Html$Attributes$style, 'overflow-y', 'auto')
+						$author$project$Main$onKeyHandler(puzzle)
 					]),
 				_List_fromArray(
 					[
@@ -12188,7 +12182,15 @@ var $author$project$Main$view = function (model) {
 							])),
 						A2(
 						$elm$html$Html$div,
-						_List_Nil,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'border-style', 'solid'),
+								A2($elm$html$Html$Attributes$style, 'width', '280px'),
+								A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+								A2($elm$html$Html$Attributes$style, 'border-radius', '10px'),
+								A2($elm$html$Html$Attributes$style, 'height', '300px'),
+								A2($elm$html$Html$Attributes$style, 'overflow-y', 'auto')
+							]),
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$viewAttempt(puzzle),

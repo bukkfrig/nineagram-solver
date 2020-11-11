@@ -217,7 +217,7 @@ view model =
                     ]
                 ]
             ]
-        , div [ onKeyHandler puzzle, style "border-style" "solid", style "width" "280px", style "padding" "10px", style "border-radius" "10px", style "height" "500px", style "overflow-y" "auto" ]
+        , div [ onKeyHandler puzzle ]
             [ div [] [ viewNineagram puzzle model.currentAttempt ]
             , Html.form [ onSubmit <| SubmitAttempt puzzle ]
                 [ label [ for "guess" ] [ text "Guess a word" ]
@@ -234,7 +234,8 @@ view model =
                     []
                 , button [] [ text "Guess" ]
                 ]
-            , div [] <| List.map (viewAttempt puzzle) model.attempts
+            , List.map (viewAttempt puzzle) model.attempts
+                |> div [style "border-style" "solid", style "width" "280px", style "padding" "10px", style "border-radius" "10px", style "height" "300px", style "overflow-y" "auto" ] 
             , div [ class "cheat" ]
                 [ text "All solutions:"
                 , if model.cheat then
