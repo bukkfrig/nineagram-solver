@@ -12021,7 +12021,9 @@ var $author$project$Main$view = function (model) {
 		_List_fromArray(
 			[
 				A2($elm$html$Html$Attributes$style, 'font-family', 'Helvetica, Arial, sans-serif'),
-				A2($elm$html$Html$Attributes$style, 'font-size', 'small')
+				A2($elm$html$Html$Attributes$style, 'width', '340px'),
+				A2($elm$html$Html$Attributes$style, 'background-color', 'ghostwhite'),
+				A2($elm$html$Html$Attributes$style, 'margin', 'auto')
 			]),
 		_List_fromArray(
 			[
@@ -12052,7 +12054,7 @@ var $author$project$Main$view = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$for('puzzleLetters'),
-												A2($elm$html$Html$Attributes$style, 'margin', '10px')
+												A2($elm$html$Html$Attributes$style, 'margin', '20px')
 											]),
 										_List_fromArray(
 											[
@@ -12061,7 +12063,7 @@ var $author$project$Main$view = function (model) {
 												_List_Nil,
 												_List_fromArray(
 													[
-														$elm$html$Html$text('Letters of your Nineagram')
+														$elm$html$Html$text('Nineagram Letters')
 													]))
 											])),
 										A2($elm$html$Html$br, _List_Nil, _List_Nil),
@@ -12081,7 +12083,10 @@ var $author$project$Main$view = function (model) {
 										_List_Nil),
 										A2(
 										$elm$html$Html$div,
-										_List_Nil,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'margin-left', '15px')
+											]),
 										_List_fromArray(
 											[
 												$author$project$Main$viewCreationProblems(model.problems)
@@ -12143,7 +12148,8 @@ var $author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$Events$onSubmit(
-								$author$project$Main$SubmitAttempt(puzzle))
+								$author$project$Main$SubmitAttempt(puzzle)),
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 							]),
 						_List_fromArray(
 							[
@@ -12155,7 +12161,13 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Guess a word')
+										A2(
+										$elm$html$Html$b,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Next Guess')
+											]))
 									])),
 								A2($elm$html$Html$br, _List_Nil, _List_Nil),
 								A2(
@@ -12185,11 +12197,12 @@ var $author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								A2($elm$html$Html$Attributes$style, 'border-style', 'solid'),
-								A2($elm$html$Html$Attributes$style, 'width', '280px'),
-								A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+								A2($elm$html$Html$Attributes$style, 'border-width', '1px'),
+								A2($elm$html$Html$Attributes$style, 'width', '90%'),
 								A2($elm$html$Html$Attributes$style, 'border-radius', '10px'),
-								A2($elm$html$Html$Attributes$style, 'height', '300px'),
-								A2($elm$html$Html$Attributes$style, 'overflow-y', 'auto')
+								A2($elm$html$Html$Attributes$style, 'height', '250px'),
+								A2($elm$html$Html$Attributes$style, 'overflow-y', 'auto'),
+								A2($elm$html$Html$Attributes$style, 'margin', 'auto')
 							]),
 						A2(
 							$elm$core$List$map,
@@ -12199,7 +12212,9 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('cheat')
+								$elm$html$Html$Attributes$class('cheat'),
+								A2($elm$html$Html$Attributes$style, 'width', '90%'),
+								A2($elm$html$Html$Attributes$style, 'margin', 'auto')
 							]),
 						_List_fromArray(
 							[

@@ -191,11 +191,11 @@ view model =
         puzzle =
             Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
     in
-    div [ style "font-family" "Helvetica, Arial, sans-serif", style "font-size" "small" ]
+    div [ style "font-family" "Helvetica, Arial, sans-serif", style "width" "340px", style "background-color" "ghostwhite", style "margin" "auto" ]
         [ div []
             [ Html.form [ class "puzzleform", onSubmit SubmittedPuzzleLetters ]
                 [ div [ class "lettersInput" ]
-                    [ label [ for "puzzleLetters", style "margin" "10px" ] [ b [] [ text "Letters of your Nineagram" ] ]
+                    [ label [ for "puzzleLetters", style "margin" "20px" ] [ b [] [ text "Nineagram Letters" ] ]
                     , br [] []
                     , input
                         [ id "puzzleLetters"
@@ -207,7 +207,7 @@ view model =
                         , disabled (model.puzzle /= Nothing)
                         ]
                         []
-                    , div [] [ viewCreationProblems model.problems ]
+                    , div [ style "margin-left" "15px" ] [ viewCreationProblems model.problems ]
                     ]
                 , div []
                     [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
@@ -219,8 +219,8 @@ view model =
             ]
         , div [ onKeyHandler puzzle ]
             [ div [] [ viewNineagram puzzle model.currentAttempt ]
-            , Html.form [ onSubmit <| SubmitAttempt puzzle ]
-                [ label [ for "guess" ] [ text "Guess a word" ]
+            , Html.form [ onSubmit <| SubmitAttempt puzzle, style "text-align" "center" ]
+                [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
                 , br [] []
                 , input
                     [ name "guess"
@@ -235,8 +235,16 @@ view model =
                 , button [] [ text "Guess" ]
                 ]
             , List.map (viewAttempt puzzle) model.attempts
-                |> div [style "border-style" "solid", style "width" "280px", style "padding" "10px", style "border-radius" "10px", style "height" "300px", style "overflow-y" "auto" ] 
-            , div [ class "cheat" ]
+                |> div
+                    [ style "border-style" "solid"
+                    , style "border-width" "1px"
+                    , style "width" "90%"
+                    , style "border-radius" "10px"
+                    , style "height" "250px"
+                    , style "overflow-y" "auto"
+                    , style "margin" "auto"
+                    ]
+            , div [ class "cheat", style "width" "90%", style "margin" "auto" ]
                 [ text "All solutions:"
                 , if model.cheat then
                     Html.Lazy.lazy viewCheatSolutions puzzle

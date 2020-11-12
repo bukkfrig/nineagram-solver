@@ -4,25 +4,25 @@
 <head>
     <title>Nineagram Solver</title>
     <link rel=icon href=favicon.ico />
-    <meta name=viewport content=width=device-width, initial-scale=1.0>
+    <meta name=viewport content=width=360, initial-scale=1.0>
     <style>
-        h1 {
-            margin: 10px inherit inherit inherit;
-        }
 
         div.lettersInput {
             height: 80px;
+            margin: auto;
+            width: 100%;
         }
 
         form.puzzleform {
-            border-radius: 10px;
-            border-style: none;
             height: 120px;
             padding: 10px;
-            width: 300px;
+            width: 90%;
+            margin: auto;
+            text-align: center;
         }
 
         input.lettersInput {
+            display: block;
             border-radius: 10px;
             border-style: solid;
             font-family: Consolas, monospace;
@@ -30,15 +30,17 @@
             font-weight: bold;
             letter-spacing: 3px;
             padding: 5px;
-            width: max-content;
+            width: 90%;
+            margin: auto;
+            text-align: center;
         }
 
         div.nineagram {
             background-color: ghostwhite;
             margin: 5px;
             padding: 5px;
-            position: relative;
             text-align: center;
+            margin: auto;
             width: max-content;
         }
 
@@ -79,7 +81,6 @@
             margin: 4px 2px;
             display: inline-block;
             background-color: white;
-
         }
 
         input.letter {
@@ -95,12 +96,14 @@
         }
 
         div.attempt {
-            width: 200px;
+            width: 90%;
             border-style: solid;
-            border-radius: 10px;
+            border-width: 1px;
+            border-radius: 5px;
             font-family: Consolas, monospace;
-            margin: 5px;
-            padding: 5px;
+            margin: auto;
+            margin-top: 3px;
+            text-align: center;
         }
         
         div.oneguess {
