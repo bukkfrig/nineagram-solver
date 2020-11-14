@@ -10910,10 +10910,7 @@ var $author$project$Main$update = F2(
 							return _Utils_update(
 								model,
 								{
-									attempts: _Utils_ap(
-										_List_fromArray(
-											[newAttempt]),
-										model.attempts),
+									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
 									currentAttempt: newAttempt,
 									typingGuess: ''
 								});
@@ -10922,10 +10919,7 @@ var $author$project$Main$update = F2(
 							return _Utils_update(
 								model,
 								{
-									attempts: _Utils_ap(
-										_List_fromArray(
-											[newAttempt]),
-										model.attempts),
+									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
 									currentAttempt: newAttempt,
 									typingGuess: ''
 								});
@@ -11290,9 +11284,7 @@ var $author$project$Main$viewCreationProblems = function (problems) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'color', 'red'),
-				A2($elm$html$Html$Attributes$style, 'font-size', 'x-small'),
-				A2($elm$html$Html$Attributes$style, 'width', 'max-content')
+				$elm$html$Html$Attributes$class('creationProblem')
 			]),
 		A2(
 			$elm$core$List$map,
@@ -11347,6 +11339,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(1)),
@@ -11368,6 +11361,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(2)),
@@ -11389,6 +11383,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(6)),
@@ -11409,6 +11404,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(7)),
@@ -11429,6 +11425,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(3)),
@@ -11449,6 +11446,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(8)),
@@ -11469,6 +11467,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(9)),
@@ -11490,6 +11489,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(4)),
@@ -11511,6 +11511,7 @@ var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$class('letter'),
 								$elm$html$Html$Attributes$placeholder(
 								letter(5)),
@@ -11597,6 +11598,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(1)),
@@ -11618,6 +11620,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(2)),
@@ -11639,6 +11642,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(6)),
@@ -11659,6 +11663,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(7)),
@@ -11679,6 +11684,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(3)),
@@ -11699,6 +11705,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(8)),
@@ -11719,6 +11726,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(9)),
@@ -11740,6 +11748,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(4)),
@@ -11761,6 +11770,7 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(5)),
@@ -11823,6 +11833,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(1)),
@@ -11844,6 +11855,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(2)),
@@ -11865,6 +11877,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(6)),
@@ -11885,6 +11898,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(7)),
@@ -11905,6 +11919,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(3)),
@@ -11925,6 +11940,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(8)),
@@ -11945,6 +11961,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(9)),
@@ -11966,6 +11983,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(4)),
@@ -11987,6 +12005,7 @@ var $author$project$Main$viewNineagramTwoGuesses = F2(
 							$elm$html$Html$input,
 							_List_fromArray(
 								[
+									$elm$html$Html$Attributes$type_('text'),
 									$elm$html$Html$Attributes$class('letter'),
 									$elm$html$Html$Attributes$placeholder(
 									letter(5)),
@@ -12020,10 +12039,7 @@ var $author$project$Main$view = function (model) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'font-family', 'Helvetica, Arial, sans-serif'),
-				A2($elm$html$Html$Attributes$style, 'width', '340px'),
-				A2($elm$html$Html$Attributes$style, 'background-color', 'ghostwhite'),
-				A2($elm$html$Html$Attributes$style, 'margin', 'auto')
+				$elm$html$Html$Attributes$class('nineagramSolver')
 			]),
 		_List_fromArray(
 			[
@@ -12053,8 +12069,7 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$label,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$for('puzzleLetters'),
-												A2($elm$html$Html$Attributes$style, 'margin', '20px')
+												$elm$html$Html$Attributes$for('puzzleLetters')
 											]),
 										_List_fromArray(
 											[
@@ -12071,6 +12086,7 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$input,
 										_List_fromArray(
 											[
+												$elm$html$Html$Attributes$type_('text'),
 												$elm$html$Html$Attributes$id('puzzleLetters'),
 												$elm$html$Html$Attributes$class('lettersInput'),
 												$elm$html$Html$Events$onInput($author$project$Main$TypedPuzzleLetters),
@@ -12085,7 +12101,7 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												A2($elm$html$Html$Attributes$style, 'margin-left', '15px')
+												$elm$html$Html$Attributes$class('creationProblems')
 											]),
 										_List_fromArray(
 											[
@@ -12149,7 +12165,7 @@ var $author$project$Main$view = function (model) {
 							[
 								$elm$html$Html$Events$onSubmit(
 								$author$project$Main$SubmitAttempt(puzzle)),
-								A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+								$elm$html$Html$Attributes$class('guessForm')
 							]),
 						_List_fromArray(
 							[
@@ -12196,13 +12212,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'border-style', 'solid'),
-								A2($elm$html$Html$Attributes$style, 'border-width', '1px'),
-								A2($elm$html$Html$Attributes$style, 'width', '90%'),
-								A2($elm$html$Html$Attributes$style, 'border-radius', '10px'),
-								A2($elm$html$Html$Attributes$style, 'height', '250px'),
-								A2($elm$html$Html$Attributes$style, 'overflow-y', 'auto'),
-								A2($elm$html$Html$Attributes$style, 'margin', 'auto')
+								$elm$html$Html$Attributes$class('attempts')
 							]),
 						A2(
 							$elm$core$List$map,
@@ -12212,9 +12222,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('cheat'),
-								A2($elm$html$Html$Attributes$style, 'width', '90%'),
-								A2($elm$html$Html$Attributes$style, 'margin', 'auto')
+								$elm$html$Html$Attributes$class('cheat')
 							]),
 						_List_fromArray(
 							[

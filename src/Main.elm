@@ -113,7 +113,7 @@ update msg model =
                                             OneGuess newGuess
                                 in
                                 { model
-                                    | attempts = [ newAttempt ] ++ model.attempts
+                                    | attempts = newAttempt :: model.attempts
                                     , currentAttempt = newAttempt
                                     , typingGuess = ""
                                 }
@@ -124,7 +124,7 @@ update msg model =
                                         OneGuess newGuess
                                 in
                                 { model
-                                    | attempts = [ newAttempt ] ++ model.attempts
+                                    | attempts = newAttempt :: model.attempts
                                     , currentAttempt = newAttempt
                                     , typingGuess = ""
                                 }
@@ -191,14 +191,15 @@ view model =
         puzzle =
             Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
     in
-    div [ style "font-family" "Helvetica, Arial, sans-serif", style "width" "340px", style "background-color" "ghostwhite", style "margin" "auto" ]
+    div [ class "nineagramSolver" ]
         [ div []
             [ Html.form [ class "puzzleform", onSubmit SubmittedPuzzleLetters ]
                 [ div [ class "lettersInput" ]
-                    [ label [ for "puzzleLetters", style "margin" "20px" ] [ b [] [ text "Nineagram Letters" ] ]
+                    [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
                     , br [] []
                     , input
-                        [ id "puzzleLetters"
+                        [ type_ "text"
+                        , id "puzzleLetters"
                         , class "lettersInput"
                         , onInput TypedPuzzleLetters
                         , spellcheck False
@@ -207,7 +208,7 @@ view model =
                         , disabled (model.puzzle /= Nothing)
                         ]
                         []
-                    , div [ style "margin-left" "15px" ] [ viewCreationProblems model.problems ]
+                    , div [ class "creationProblems" ] [ viewCreationProblems model.problems ]
                     ]
                 , div []
                     [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
@@ -219,7 +220,7 @@ view model =
             ]
         , div [ onKeyHandler puzzle ]
             [ div [] [ viewNineagram puzzle model.currentAttempt ]
-            , Html.form [ onSubmit <| SubmitAttempt puzzle, style "text-align" "center" ]
+            , Html.form [ onSubmit <| SubmitAttempt puzzle, class "guessForm" ]
                 [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
                 , br [] []
                 , input
@@ -234,17 +235,8 @@ view model =
                     []
                 , button [] [ text "Guess" ]
                 ]
-            , List.map (viewAttempt puzzle) model.attempts
-                |> div
-                    [ style "border-style" "solid"
-                    , style "border-width" "1px"
-                    , style "width" "90%"
-                    , style "border-radius" "10px"
-                    , style "height" "250px"
-                    , style "overflow-y" "auto"
-                    , style "margin" "auto"
-                    ]
-            , div [ class "cheat", style "width" "90%", style "margin" "auto" ]
+            , div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
+            , div [ class "cheat" ]
                 [ text "All solutions:"
                 , if model.cheat then
                     Html.Lazy.lazy viewCheatSolutions puzzle
@@ -282,7 +274,7 @@ viewCreationProblems problems =
     in
     List.filterMap displayProblem problems
         |> List.map (\message -> div [] [ text message ])
-        |> div [ style "color" "red", style "font-size" "x-small", style "width" "max-content" ]
+        |> div [ class "creationProblem" ]
 
 
 viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
@@ -354,19 +346,19 @@ viewNineagramNoGuesses puzzle =
             ""
     in
     div [ class "nineagram" ]
-        [ div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 1), value (guess 1) ] [] ]
+        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (guess 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 2), value (guess 2) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (guess 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 6), value (guess 6) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 7), value (guess 7) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 3), value (guess 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 8), value (guess 8) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 9), value (guess 9) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (guess 6) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (guess 7) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (guess 3) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (guess 8) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (guess 9) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 4), value (guess 4) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (guess 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 5), value (guess 5) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (guess 5) ] [] ]
         ]
 
 
@@ -394,19 +386,19 @@ viewNineagramOneGuess puzzle guess =
                 |> String.toUpper
     in
     div [ class "nineagram" ]
-        [ div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 1), value (guessLetter 1) ] [] ]
+        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (guessLetter 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 2), value (guessLetter 2) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (guessLetter 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 6), value (guessLetter 6) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 7), value (guessLetter 7) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 3), value (guessLetter 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 8), value (guessLetter 8) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 9), value (guessLetter 9) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (guessLetter 6) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (guessLetter 7) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (guessLetter 3) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (guessLetter 8) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (guessLetter 9) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 4), value (guessLetter 4) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (guessLetter 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 5), value (guessLetter 5) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (guessLetter 5) ] [] ]
         ]
 
 
@@ -435,19 +427,19 @@ viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
                 |> String.toUpper
     in
     div [ class "nineagram", class "solution" ]
-        [ div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 1), value (firstGuessLetter 1) ] [] ]
+        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (firstGuessLetter 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 2), value (firstGuessLetter 2) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (firstGuessLetter 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 6), value (secondGuessLetter 1) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 7), value (secondGuessLetter 2) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 3), value (secondGuessLetter 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 8), value (secondGuessLetter 4) ] [] ]
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 9), value (secondGuessLetter 5) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (secondGuessLetter 1) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (secondGuessLetter 2) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (secondGuessLetter 3) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (secondGuessLetter 4) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (secondGuessLetter 5) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 4), value (firstGuessLetter 4) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (firstGuessLetter 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ class "letter", placeholder (letter 5), value (firstGuessLetter 5) ] [] ]
+        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (firstGuessLetter 5) ] [] ]
         ]
 
 
