@@ -1,12 +1,13 @@
 module Nineagram exposing
     ( CreationProblem(..)
+    , GuessProblem(..)
     , NineagramPuzzle
     , fromCharList
     , fromString
     , getLetters
     , hasSolutions
     , isSolution
-    , isValidGuess
+    , validateGuess
     , remainingLetters
     , solutions
     , defaultPuzzle
@@ -94,72 +95,71 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
 
     else
         case removeLetters puzzleLetters (guess |> Nineagram.Guess.toString |> String.toList) of
-            Nothing ->
+            Err _ ->
                 False
 
-            Just letters ->
+            Ok letters ->
                 case removeLetters letters (otherGuess |> Nineagram.Guess.toString |> String.toList |> removeMiddleLetter) of
-                    Nothing ->
+                    Err err ->
                         False
 
-                    Just [] ->
+                    Ok [] ->
                         True
 
-                    Just _ ->
+                    Ok _ ->
                         False
 
 
-isValidGuess : NineagramPuzzle -> Guess -> Bool
-isValidGuess nineagram guess =
-    if (guess |> Nineagram.Guess.toString |> String.length) /= 5 then
-        False
+type GuessProblem
+    = LetterNotFound Char
 
-    else
-        case remainingLetters nineagram guess of
-            Nothing ->
-                False
+validateGuess : NineagramPuzzle -> Guess -> Result (List GuessProblem) ()
+validateGuess nineagram guess =
+    case remainingLetters nineagram guess of
+        Ok _ ->
+            Ok ()
 
-            Just letters ->
-                True
+        Err problems ->
+            Err problems
 
 
-remainingLetters : NineagramPuzzle -> Guess -> Maybe (List Char)
+remainingLetters : NineagramPuzzle -> Guess -> Result (List GuessProblem) (List Char)
 remainingLetters (NineagramPuzzle puzzleLetters) guess =
     removeLetters puzzleLetters (String.toList <| Nineagram.Guess.toString guess)
 
 
-removeLetters : List Char -> List Char -> Maybe (List Char)
+removeLetters : List Char -> List Char -> Result (List GuessProblem) (List Char)
 removeLetters input lettersToRemove =
     case lettersToRemove of
         [] ->
-            Just input
+            Ok input
 
         x :: rest ->
             case removeLetter input x of
-                Nothing ->
-                    Nothing
+                Err problem ->
+                    Err [ problem ]
 
-                Just inputWithXRemoved ->
+                Ok inputWithXRemoved ->
                     removeLetters inputWithXRemoved rest
 
 
-removeLetter : List Char -> Char -> Maybe (List Char)
+removeLetter : List Char -> Char -> Result GuessProblem (List Char)
 removeLetter input letter =
     case input of
         [] ->
-            Nothing
+            Err (LetterNotFound letter)
 
         x :: rest ->
             if x == letter then
-                Just rest
+                Ok rest
 
             else
                 case removeLetter rest letter of
-                    Nothing ->
-                        Nothing
+                    Err err ->
+                        Err err
 
-                    Just remainingInput ->
-                        Just (x :: remainingInput)
+                    Ok remainingInput ->
+                        Ok (x :: remainingInput)
 
 
 getMiddleLetter : Guess -> List Char

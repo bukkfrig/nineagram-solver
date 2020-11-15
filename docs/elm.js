@@ -4976,7 +4976,7 @@ var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Main$NoGuesses = {$: 'NoGuesses'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $author$project$Main$init = {attempts: _List_Nil, cheat: false, currentAttempt: $author$project$Main$NoGuesses, defaultAttempt: $author$project$Main$NoGuesses, letters: '', problems: _List_Nil, puzzle: $elm$core$Maybe$Nothing, typingGuess: ''};
+var $author$project$Main$init = {attempts: _List_Nil, cheat: false, currentAttempt: $author$project$Main$NoGuesses, defaultAttempt: $author$project$Main$NoGuesses, guessForPuzzleProblems: _List_Nil, guessProblems: _List_Nil, letters: '', problems: _List_Nil, puzzle: $elm$core$Maybe$Nothing, typingGuess: ''};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -10597,15 +10597,24 @@ var $author$project$Nineagram$fromString = function (letters) {
 var $author$project$Nineagram$Guess$Guess = function (a) {
 	return {$: 'Guess', a: a};
 };
-var $author$project$Nineagram$Guess$GuessTooLong = {$: 'GuessTooLong'};
-var $author$project$Nineagram$Guess$GuessTooShort = {$: 'GuessTooShort'};
+var $author$project$Nineagram$Guess$GuessTooLong = function (a) {
+	return {$: 'GuessTooLong', a: a};
+};
+var $author$project$Nineagram$Guess$GuessTooShort = function (a) {
+	return {$: 'GuessTooShort', a: a};
+};
 var $elm$core$String$toLower = _String_toLower;
 var $author$project$Nineagram$Guess$fromString = function (guess) {
-	return ($elm$core$String$length(guess) < 5) ? $elm$core$Result$Err(
+	var length = $elm$core$String$length(guess);
+	return (length < 5) ? $elm$core$Result$Err(
 		_List_fromArray(
-			[$author$project$Nineagram$Guess$GuessTooShort])) : (($elm$core$String$length(guess) > 5) ? $elm$core$Result$Err(
+			[
+				$author$project$Nineagram$Guess$GuessTooShort(length)
+			])) : ((length > 5) ? $elm$core$Result$Err(
 		_List_fromArray(
-			[$author$project$Nineagram$Guess$GuessTooLong])) : $elm$core$Result$Ok(
+			[
+				$author$project$Nineagram$Guess$GuessTooLong(length)
+			])) : $elm$core$Result$Ok(
 		$author$project$Nineagram$Guess$Guess(
 			$elm$core$String$toLower(guess))));
 };
@@ -10749,22 +10758,27 @@ var $author$project$Nineagram$getMiddleLetter = function (guess) {
 			$elm$core$String$toList(
 				$author$project$Nineagram$Guess$toString(guess))));
 };
+var $author$project$Nineagram$LetterNotFound = function (a) {
+	return {$: 'LetterNotFound', a: a};
+};
 var $author$project$Nineagram$removeLetter = F2(
 	function (input, letter) {
 		if (!input.b) {
-			return $elm$core$Maybe$Nothing;
+			return $elm$core$Result$Err(
+				$author$project$Nineagram$LetterNotFound(letter));
 		} else {
 			var x = input.a;
 			var rest = input.b;
 			if (_Utils_eq(x, letter)) {
-				return $elm$core$Maybe$Just(rest);
+				return $elm$core$Result$Ok(rest);
 			} else {
 				var _v1 = A2($author$project$Nineagram$removeLetter, rest, letter);
-				if (_v1.$ === 'Nothing') {
-					return $elm$core$Maybe$Nothing;
+				if (_v1.$ === 'Err') {
+					var err = _v1.a;
+					return $elm$core$Result$Err(err);
 				} else {
 					var remainingInput = _v1.a;
-					return $elm$core$Maybe$Just(
+					return $elm$core$Result$Ok(
 						A2($elm$core$List$cons, x, remainingInput));
 				}
 			}
@@ -10775,13 +10789,16 @@ var $author$project$Nineagram$removeLetters = F2(
 		removeLetters:
 		while (true) {
 			if (!lettersToRemove.b) {
-				return $elm$core$Maybe$Just(input);
+				return $elm$core$Result$Ok(input);
 			} else {
 				var x = lettersToRemove.a;
 				var rest = lettersToRemove.b;
 				var _v1 = A2($author$project$Nineagram$removeLetter, input, x);
-				if (_v1.$ === 'Nothing') {
-					return $elm$core$Maybe$Nothing;
+				if (_v1.$ === 'Err') {
+					var problem = _v1.a;
+					return $elm$core$Result$Err(
+						_List_fromArray(
+							[problem]));
 				} else {
 					var inputWithXRemoved = _v1.a;
 					var $temp$input = inputWithXRemoved,
@@ -10811,7 +10828,7 @@ var $author$project$Nineagram$isSolution = F3(
 				puzzleLetters,
 				$elm$core$String$toList(
 					$author$project$Nineagram$Guess$toString(guess)));
-			if (_v1.$ === 'Nothing') {
+			if (_v1.$ === 'Err') {
 				return false;
 			} else {
 				var letters = _v1.a;
@@ -10821,7 +10838,8 @@ var $author$project$Nineagram$isSolution = F3(
 					$author$project$Nineagram$removeMiddleLetter(
 						$elm$core$String$toList(
 							$author$project$Nineagram$Guess$toString(otherGuess))));
-				if (_v2.$ === 'Nothing') {
+				if (_v2.$ === 'Err') {
+					var err = _v2.a;
 					return false;
 				} else {
 					if (!_v2.a.b) {
@@ -10833,6 +10851,7 @@ var $author$project$Nineagram$isSolution = F3(
 			}
 		}
 	});
+var $elm$core$String$toUpper = _String_toUpper;
 var $author$project$Nineagram$remainingLetters = F2(
 	function (_v0, guess) {
 		var puzzleLetters = _v0.a;
@@ -10842,22 +10861,16 @@ var $author$project$Nineagram$remainingLetters = F2(
 			$elm$core$String$toList(
 				$author$project$Nineagram$Guess$toString(guess)));
 	});
-var $author$project$Nineagram$isValidGuess = F2(
+var $author$project$Nineagram$validateGuess = F2(
 	function (nineagram, guess) {
-		if ($elm$core$String$length(
-			$author$project$Nineagram$Guess$toString(guess)) !== 5) {
-			return false;
+		var _v0 = A2($author$project$Nineagram$remainingLetters, nineagram, guess);
+		if (_v0.$ === 'Ok') {
+			return $elm$core$Result$Ok(_Utils_Tuple0);
 		} else {
-			var _v0 = A2($author$project$Nineagram$remainingLetters, nineagram, guess);
-			if (_v0.$ === 'Nothing') {
-				return false;
-			} else {
-				var letters = _v0.a;
-				return true;
-			}
+			var problems = _v0.a;
+			return $elm$core$Result$Err(problems);
 		}
 	});
-var $elm$core$String$toUpper = _String_toUpper;
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -10868,7 +10881,7 @@ var $author$project$Main$update = F2(
 					{
 						letters: $elm$core$String$toUpper(letters)
 					});
-			case 'SubmittedPuzzleLetters':
+			case 'SubmitPuzzleLetters':
 				var _v1 = $author$project$Nineagram$fromString(model.letters);
 				if (_v1.$ === 'Ok') {
 					var puzzle = _v1.a;
@@ -10894,21 +10907,31 @@ var $author$project$Main$update = F2(
 					});
 			case 'SubmitAttempt':
 				var puzzle = msg.a;
-				var _v2 = $author$project$Nineagram$Guess$fromString(model.typingGuess);
+				var modelWithNoProblems = _Utils_update(
+					model,
+					{guessForPuzzleProblems: _List_Nil, guessProblems: _List_Nil});
+				var _v2 = $author$project$Nineagram$Guess$fromString(
+					$elm$core$String$trim(model.typingGuess));
 				if (_v2.$ === 'Err') {
-					var problems = _v2.a;
-					return model;
+					var guessProblems = _v2.a;
+					return _Utils_update(
+						modelWithNoProblems,
+						{guessProblems: guessProblems});
 				} else {
 					var newGuess = _v2.a;
-					if (!A2($author$project$Nineagram$isValidGuess, puzzle, newGuess)) {
-						return model;
+					var _v3 = A2($author$project$Nineagram$validateGuess, puzzle, newGuess);
+					if (_v3.$ === 'Err') {
+						var problems = _v3.a;
+						return _Utils_update(
+							modelWithNoProblems,
+							{guessForPuzzleProblems: problems});
 					} else {
-						var _v3 = model.currentAttempt;
-						if (_v3.$ === 'OneGuess') {
-							var firstGuess = _v3.a;
+						var _v4 = model.currentAttempt;
+						if (_v4.$ === 'OneGuess') {
+							var firstGuess = _v4.a;
 							var newAttempt = A3($author$project$Nineagram$isSolution, puzzle, firstGuess, newGuess) ? A2($author$project$Main$TwoGuesses, firstGuess, newGuess) : $author$project$Main$OneGuess(newGuess);
 							return _Utils_update(
-								model,
+								modelWithNoProblems,
 								{
 									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
 									currentAttempt: newAttempt,
@@ -10917,7 +10940,7 @@ var $author$project$Main$update = F2(
 						} else {
 							var newAttempt = $author$project$Main$OneGuess(newGuess);
 							return _Utils_update(
-								model,
+								modelWithNoProblems,
 								{
 									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
 									currentAttempt: newAttempt,
@@ -10961,7 +10984,7 @@ var $author$project$Main$Reset = {$: 'Reset'};
 var $author$project$Main$SubmitAttempt = function (a) {
 	return {$: 'SubmitAttempt', a: a};
 };
-var $author$project$Main$SubmittedPuzzleLetters = {$: 'SubmittedPuzzleLetters'};
+var $author$project$Main$SubmitPuzzleLetters = {$: 'SubmitPuzzleLetters'};
 var $author$project$Main$TypedPuzzleLetters = function (a) {
 	return {$: 'TypedPuzzleLetters', a: a};
 };
@@ -11040,14 +11063,24 @@ var $author$project$Main$SelectAttempt = function (a) {
 };
 var $elm$core$String$fromList = _String_fromList;
 var $elm$html$Html$i = _VirtualDom_node('i');
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
 		} else {
-			return $elm$core$Maybe$Nothing;
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
+var $elm$core$Result$withDefault = F2(
+	function (def, result) {
+		if (result.$ === 'Ok') {
+			var a = result.a;
+			return a;
+		} else {
+			return def;
 		}
 	});
 var $author$project$Main$viewAttempt = F2(
@@ -11076,10 +11109,10 @@ var $author$project$Main$viewAttempt = F2(
 			case 'OneGuess':
 				var guess = attempt.a;
 				var remaining = A2(
-					$elm$core$Maybe$withDefault,
+					$elm$core$Result$withDefault,
 					'',
 					A2(
-						$elm$core$Maybe$map,
+						$elm$core$Result$map,
 						$elm$core$String$fromList,
 						A2($author$project$Nineagram$remainingLetters, puzzle, guess)));
 				var middleLetter = A2(
@@ -11222,7 +11255,11 @@ var $author$project$Nineagram$solutions = F3(
 var $author$project$Main$viewSolutions = F2(
 	function (puzzle, guesses) {
 		var solutions = A2($author$project$Nineagram$solutions, puzzle, guesses);
-		var isValid = $author$project$Nineagram$isValidGuess(puzzle);
+		var isValid = function (guess) {
+			return _Utils_eq(
+				A2($author$project$Nineagram$validateGuess, puzzle, guess),
+				$elm$core$Result$Ok(_Utils_Tuple0));
+		};
 		var hasSolutions = A2($author$project$Nineagram$hasSolutions, puzzle, guesses);
 		var viewSolutionsForGuess = function (guess) {
 			return (isValid(guess) && hasSolutions(guess)) ? A2(
@@ -11248,7 +11285,11 @@ var $author$project$Main$viewSolutions = F2(
 var $author$project$Main$viewCheatSolutions = function (puzzle) {
 	var cheatGuesses = A2(
 		$elm$core$List$filter,
-		$author$project$Nineagram$isValidGuess(puzzle),
+		function (guess) {
+			return _Utils_eq(
+				A2($author$project$Nineagram$validateGuess, puzzle, guess),
+				$elm$core$Result$Ok(_Utils_Tuple0));
+		},
 		A2(
 			$elm$core$List$filterMap,
 			A2($elm$core$Basics$composeL, $elm$core$Result$toMaybe, $author$project$Nineagram$Guess$fromString),
@@ -11285,6 +11326,67 @@ var $author$project$Main$viewCreationProblems = function (problems) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class('creationProblem')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (message) {
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(message)
+						]));
+			},
+			A2($elm$core$List$filterMap, displayProblem, problems)));
+};
+var $author$project$Main$viewGuessForPuzzleProblems = function (problems) {
+	var displayProblem = function (problem) {
+		var letter = problem.a;
+		return $elm$core$Maybe$Just(
+			'There aren\'t enough \'' + ($elm$core$String$toUpper(
+				$elm$core$String$fromChar(letter)) + '\' for that word.'));
+	};
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('guessForPuzzleProblem')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (message) {
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(message)
+						]));
+			},
+			A2($elm$core$List$filterMap, displayProblem, problems)));
+};
+var $author$project$Main$viewGuessProblems = function (problems) {
+	var displayProblem = function (problem) {
+		if (problem.$ === 'GuessTooShort') {
+			if (!problem.a) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var n = problem.a;
+				return $elm$core$Maybe$Just(
+					'That\'s only ' + ($elm$core$String$fromInt(n) + ' letters. Your words should have exactly five letters.'));
+			}
+		} else {
+			var n = problem.a;
+			return $elm$core$Maybe$Just(
+				'That\'s ' + ($elm$core$String$fromInt(n) + ' letters. Your words should have exactly five letters.'));
+		}
+	};
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('guessProblem')
 			]),
 		A2(
 			$elm$core$List$map,
@@ -11546,7 +11648,7 @@ var $elm$core$List$repeat = F2(
 var $author$project$Main$viewNineagramOneGuess = F2(
 	function (puzzle, guess) {
 		var remain = A2(
-			$elm$core$Maybe$withDefault,
+			$elm$core$Result$withDefault,
 			_List_Nil,
 			A2($author$project$Nineagram$remainingLetters, puzzle, guess));
 		var letter = function (n) {
@@ -12053,7 +12155,7 @@ var $author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('puzzleform'),
-								$elm$html$Html$Events$onSubmit($author$project$Main$SubmittedPuzzleLetters)
+								$elm$html$Html$Events$onSubmit($author$project$Main$SubmitPuzzleLetters)
 							]),
 						_List_fromArray(
 							[
@@ -12201,6 +12303,17 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_Nil),
 								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('guessProblems')
+									]),
+								_List_fromArray(
+									[
+										$author$project$Main$viewGuessProblems(model.guessProblems),
+										$author$project$Main$viewGuessForPuzzleProblems(model.guessForPuzzleProblems)
+									])),
+								A2(
 								$elm$html$Html$button,
 								_List_Nil,
 								_List_fromArray(
@@ -12254,4 +12367,4 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$Main$init, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{},"unions":{"Main.Msg":{"args":[],"tags":{"TypedPuzzleLetters":["String.String"],"SubmittedPuzzleLetters":[],"Reset":[],"TypingGuess":["String.String"],"SubmitAttempt":["Nineagram.NineagramPuzzle"],"SelectAttempt":["Main.Attempt"],"SelectDefaultAttempt":[],"DeleteAttempt":["Main.Attempt"],"EnableCheat":[]}},"Main.Attempt":{"args":[],"tags":{"NoGuesses":[],"OneGuess":["Nineagram.Guess.Guess"],"TwoGuesses":["Nineagram.Guess.Guess","Nineagram.Guess.Guess"]}},"Nineagram.NineagramPuzzle":{"args":[],"tags":{"NineagramPuzzle":["List.List Char.Char"]}},"String.String":{"args":[],"tags":{"String":[]}},"Char.Char":{"args":[],"tags":{"Char":[]}},"Nineagram.Guess.Guess":{"args":[],"tags":{"Guess":["String.String"]}},"List.List":{"args":["a"],"tags":{}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{},"unions":{"Main.Msg":{"args":[],"tags":{"TypedPuzzleLetters":["String.String"],"SubmitPuzzleLetters":[],"Reset":[],"TypingGuess":["String.String"],"SubmitAttempt":["Nineagram.NineagramPuzzle"],"SelectAttempt":["Main.Attempt"],"SelectDefaultAttempt":[],"DeleteAttempt":["Main.Attempt"],"EnableCheat":[]}},"Main.Attempt":{"args":[],"tags":{"NoGuesses":[],"OneGuess":["Nineagram.Guess.Guess"],"TwoGuesses":["Nineagram.Guess.Guess","Nineagram.Guess.Guess"]}},"Nineagram.NineagramPuzzle":{"args":[],"tags":{"NineagramPuzzle":["List.List Char.Char"]}},"String.String":{"args":[],"tags":{"String":[]}},"Char.Char":{"args":[],"tags":{"Char":[]}},"Nineagram.Guess.Guess":{"args":[],"tags":{"Guess":["String.String"]}},"List.List":{"args":["a"],"tags":{}}}}})}});}(this));

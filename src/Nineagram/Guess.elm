@@ -5,23 +5,30 @@ module Nineagram.Guess exposing
     , toString
     )
 
+{-| A wrapper for a String of exactly five letters representing either of
+two words that could form a solution to a Nineagram puzzle.
+-}
+
 
 type Guess
     = Guess String
 
 
 type Problem
-    = GuessTooShort
-    | GuessTooLong
+    = GuessTooShort Int
+    | GuessTooLong Int
 
 
 fromString : String -> Result (List Problem) Guess
 fromString guess =
-    if String.length guess < 5 then
-        Err [ GuessTooShort ]
+    let
+        length = String.length guess
+    in
+    if length < 5 then
+        Err [ GuessTooShort length ]
 
-    else if String.length guess > 5 then
-        Err [ GuessTooLong ]
+    else if length > 5 then
+        Err [ GuessTooLong length ]
 
     else
         Ok <| Guess <| String.toLower guess

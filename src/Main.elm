@@ -11,6 +11,24 @@ import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess exposing (Guess)
 
 
+{-| The goal in solving a Nineagram puzzle is to find two five-letter words
+from the nine letters provided that share the same middle letter.
+
+For example, given AAEEHPPSS, one solution is PEARS and SHAPE:
+
+        P
+        E
+    S H A P E
+        R
+        S
+
+The main way that the Program assists the user is by displaying the remaining
+letters after the player guesses at one of the words.
+
+The Program can also find and display solutions by exhaustively searching
+its own word list.
+
+-}
 main : Program () Model Msg
 main =
     Browser.sandbox
@@ -34,6 +52,8 @@ type alias Model =
     { letters : String
     , problems : List Nineagram.CreationProblem
     , puzzle : Maybe NineagramPuzzle
+    , guessProblems : List Nineagram.Guess.Problem
+    , guessForPuzzleProblems : List Nineagram.GuessProblem
     , attempts : List Attempt
     , currentAttempt : Attempt
     , defaultAttempt : Attempt
@@ -47,6 +67,8 @@ init =
     { letters = ""
     , problems = []
     , puzzle = Nothing
+    , guessProblems = []
+    , guessForPuzzleProblems = []
     , attempts = []
     , currentAttempt = NoGuesses
     , defaultAttempt = NoGuesses
@@ -61,7 +83,7 @@ init =
 
 type Msg
     = TypedPuzzleLetters String
-    | SubmittedPuzzleLetters
+    | SubmitPuzzleLetters
     | Reset
     | TypingGuess String
     | SubmitAttempt NineagramPuzzle
@@ -77,7 +99,7 @@ update msg model =
         TypedPuzzleLetters letters ->
             { model | letters = letters |> String.toUpper }
 
-        SubmittedPuzzleLetters ->
+        SubmitPuzzleLetters ->
             case Nineagram.fromString model.letters of
                 Ok puzzle ->
                     { init
@@ -93,41 +115,46 @@ update msg model =
             { model | typingGuess = String.toUpper typing }
 
         SubmitAttempt puzzle ->
-            case Nineagram.Guess.fromString model.typingGuess of
-                Err problems ->
-                    model
+            let
+                modelWithNoProblems =
+                    { model | guessProblems = [], guessForPuzzleProblems = [] }
+            in
+            case Nineagram.Guess.fromString (String.trim model.typingGuess) of
+                Err guessProblems ->
+                    { modelWithNoProblems | guessProblems = guessProblems }
 
                 Ok newGuess ->
-                    if not <| Nineagram.isValidGuess puzzle newGuess then
-                        model
+                    case Nineagram.validateGuess puzzle newGuess of
+                        Err problems ->
+                            { modelWithNoProblems | guessForPuzzleProblems = problems }
 
-                    else
-                        case model.currentAttempt of
-                            OneGuess firstGuess ->
-                                let
-                                    newAttempt =
-                                        if Nineagram.isSolution puzzle firstGuess newGuess then
-                                            TwoGuesses firstGuess newGuess
+                        Ok () ->
+                            case model.currentAttempt of
+                                OneGuess firstGuess ->
+                                    let
+                                        newAttempt =
+                                            if Nineagram.isSolution puzzle firstGuess newGuess then
+                                                TwoGuesses firstGuess newGuess
 
-                                        else
+                                            else
+                                                OneGuess newGuess
+                                    in
+                                    { modelWithNoProblems
+                                        | attempts = newAttempt :: model.attempts
+                                        , currentAttempt = newAttempt
+                                        , typingGuess = ""
+                                    }
+
+                                _ ->
+                                    let
+                                        newAttempt =
                                             OneGuess newGuess
-                                in
-                                { model
-                                    | attempts = newAttempt :: model.attempts
-                                    , currentAttempt = newAttempt
-                                    , typingGuess = ""
-                                }
-
-                            _ ->
-                                let
-                                    newAttempt =
-                                        OneGuess newGuess
-                                in
-                                { model
-                                    | attempts = newAttempt :: model.attempts
-                                    , currentAttempt = newAttempt
-                                    , typingGuess = ""
-                                }
+                                    in
+                                    { modelWithNoProblems
+                                        | attempts = newAttempt :: model.attempts
+                                        , currentAttempt = newAttempt
+                                        , typingGuess = ""
+                                    }
 
         SelectAttempt attempt ->
             { model | currentAttempt = attempt }
@@ -193,7 +220,7 @@ view model =
     in
     div [ class "nineagramSolver" ]
         [ div []
-            [ Html.form [ class "puzzleform", onSubmit SubmittedPuzzleLetters ]
+            [ Html.form [ class "puzzleform", onSubmit SubmitPuzzleLetters ]
                 [ div [ class "lettersInput" ]
                     [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
                     , br [] []
@@ -233,6 +260,10 @@ view model =
                     , onInput TypingGuess
                     ]
                     []
+                , div [ class "guessProblems" ]
+                    [ viewGuessProblems model.guessProblems
+                    , viewGuessForPuzzleProblems model.guessForPuzzleProblems
+                    ]
                 , button [] [ text "Guess" ]
                 ]
             , div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
@@ -277,6 +308,40 @@ viewCreationProblems problems =
         |> div [ class "creationProblem" ]
 
 
+viewGuessProblems : List Nineagram.Guess.Problem -> Html Msg
+viewGuessProblems problems =
+    let
+        displayProblem : Nineagram.Guess.Problem -> Maybe String
+        displayProblem problem =
+            case problem of
+                Nineagram.Guess.GuessTooShort 0 ->
+                    Nothing
+
+                Nineagram.Guess.GuessTooShort n ->
+                    Just <| "That's only " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
+
+                Nineagram.Guess.GuessTooLong n ->
+                    Just <| "That's " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
+    in
+    List.filterMap displayProblem problems
+        |> List.map (\message -> div [] [ text message ])
+        |> div [ class "guessProblem" ]
+
+
+viewGuessForPuzzleProblems : List Nineagram.GuessProblem -> Html Msg
+viewGuessForPuzzleProblems problems =
+    let
+        displayProblem : Nineagram.GuessProblem -> Maybe String
+        displayProblem problem =
+            case problem of
+                Nineagram.LetterNotFound letter ->
+                    Just <| "There aren't enough '" ++ (String.fromChar letter |> String.toUpper) ++ "' for that word."
+    in
+    List.filterMap displayProblem problems
+        |> List.map (\message -> div [] [ text message ])
+        |> div [ class "guessForPuzzleProblem" ]
+
+
 viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
 viewAttempt puzzle attempt =
     case attempt of
@@ -287,8 +352,8 @@ viewAttempt puzzle attempt =
             let
                 remaining =
                     Nineagram.remainingLetters puzzle guess
-                        |> Maybe.map String.fromList
-                        |> Maybe.withDefault ""
+                        |> Result.map String.fromList
+                        |> Result.withDefault ""
 
                 middleLetter =
                     guess |> Nineagram.Guess.toString |> String.left 3 |> String.right 1
@@ -314,7 +379,7 @@ viewCheatSolutions puzzle =
         cheatGuesses =
             Cheat.cheatWords
                 |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
-                |> List.filter (Nineagram.isValidGuess puzzle)
+                |> List.filter (\guess -> Nineagram.validateGuess puzzle guess == Ok ())
     in
     viewSolutions puzzle cheatGuesses
 
@@ -367,7 +432,7 @@ viewNineagramOneGuess puzzle guess =
     let
         remain =
             Nineagram.remainingLetters puzzle guess
-                |> Maybe.withDefault []
+                |> Result.withDefault []
 
         letter n =
             (List.repeat (String.length (Nineagram.Guess.toString guess)) ' ' ++ remain)
@@ -452,8 +517,8 @@ viewSolutions puzzle guesses =
         solutions =
             Nineagram.solutions puzzle guesses
 
-        isValid =
-            Nineagram.isValidGuess puzzle
+        isValid guess =
+            Nineagram.validateGuess puzzle guess == Ok ()
 
         viewSolutionsForGuess guess =
             if isValid guess && hasSolutions guess then
