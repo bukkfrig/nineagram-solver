@@ -80,6 +80,87 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEBUG mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
+
+
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -709,87 +790,6 @@ function _Utils_ap(xs, ys)
 	}
 	return root;
 }
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
 
 
 
@@ -4893,6 +4893,8 @@ function _Browser_load(url)
 		}
 	}));
 }
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -4970,13 +4972,7 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
-var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$NoGuesses = {$: 'NoGuesses'};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $author$project$Main$init = {attempts: _List_Nil, cheat: false, currentAttempt: $author$project$Main$NoGuesses, defaultAttempt: $author$project$Main$NoGuesses, guessForPuzzleProblems: _List_Nil, guessProblems: _List_Nil, letters: '', problems: _List_Nil, puzzle: $elm$core$Maybe$Nothing, typingGuess: ''};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4998,10 +4994,12 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -10492,32 +10490,40 @@ var $elm$core$Basics$never = function (_v0) {
 		continue never;
 	}
 };
+var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$NoGuesses = {$: 'NoGuesses'};
+var $author$project$Main$init = {attempts: _List_Nil, cheat: false, currentAttempt: $author$project$Main$NoGuesses, defaultAttempt: $author$project$Main$NoGuesses, guessForPuzzleProblems: _List_Nil, guessProblems: _List_Nil, letters: '', problems: _List_Nil, puzzle: $elm$core$Maybe$Nothing, typingGuess: ''};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$sandbox = function (impl) {
-	return _Browser_element(
-		{
-			init: function (_v0) {
-				return _Utils_Tuple2(impl.init, $elm$core$Platform$Cmd$none);
-			},
-			subscriptions: function (_v1) {
-				return $elm$core$Platform$Sub$none;
-			},
-			update: F2(
-				function (msg, model) {
-					return _Utils_Tuple2(
-						A2(impl.update, msg, model),
-						$elm$core$Platform$Cmd$none);
-				}),
-			view: impl.view
-		});
-};
+var $author$project$Main$Focussed = F2(
+	function (a, b) {
+		return {$: 'Focussed', a: a, b: b};
+	});
 var $author$project$Main$OneGuess = function (a) {
 	return {$: 'OneGuess', a: a};
 };
 var $author$project$Main$TwoGuesses = F2(
 	function (a, b) {
 		return {$: 'TwoGuesses', a: a, b: b};
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			$elm$core$Task$Perform(
+				A2(
+					$elm$core$Task$onError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Err),
+					A2(
+						$elm$core$Task$andThen,
+						A2(
+							$elm$core$Basics$composeL,
+							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+							$elm$core$Result$Ok),
+						task))));
 	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -10530,6 +10536,7 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
+var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
 var $author$project$Nineagram$ContainsNonAlphaCharacters = F2(
 	function (a, b) {
 		return {$: 'ContainsNonAlphaCharacters', a: a, b: b};
@@ -10874,109 +10881,136 @@ var $author$project$Nineagram$validateGuess = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'Focussed':
+				var what = msg.a;
+				var result = msg.b;
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'TypedPuzzleLetters':
 				var letters = msg.a;
-				return _Utils_update(
-					model,
-					{
-						letters: $elm$core$String$toUpper(letters)
-					});
-			case 'SubmitPuzzleLetters':
-				var _v1 = $author$project$Nineagram$fromString(model.letters);
-				if (_v1.$ === 'Ok') {
-					var puzzle = _v1.a;
-					return _Utils_update(
-						$author$project$Main$init,
-						{
-							attempts: _List_Nil,
-							letters: $elm$core$String$toUpper(model.letters),
-							puzzle: $elm$core$Maybe$Just(puzzle)
-						});
-				} else {
-					var problems = _v1.a;
-					return _Utils_update(
+				return _Utils_Tuple2(
+					_Utils_update(
 						model,
-						{problems: problems});
-				}
+						{
+							letters: $elm$core$String$toUpper(letters)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'SubmitPuzzleLetters':
+				return _Utils_Tuple2(
+					function () {
+						var _v1 = $author$project$Nineagram$fromString(model.letters);
+						if (_v1.$ === 'Ok') {
+							var puzzle = _v1.a;
+							return _Utils_update(
+								$author$project$Main$init,
+								{
+									attempts: _List_Nil,
+									letters: $elm$core$String$toUpper(model.letters),
+									puzzle: $elm$core$Maybe$Just(puzzle)
+								});
+						} else {
+							var problems = _v1.a;
+							return _Utils_update(
+								model,
+								{problems: problems});
+						}
+					}(),
+					A2(
+						$elm$core$Task$attempt,
+						$author$project$Main$Focussed('guess'),
+						$elm$browser$Browser$Dom$focus('guess')));
 			case 'TypingGuess':
 				var typing = msg.a;
-				return _Utils_update(
-					model,
-					{
-						typingGuess: $elm$core$String$toUpper(typing)
-					});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							typingGuess: $elm$core$String$toUpper(typing)
+						}),
+					$elm$core$Platform$Cmd$none);
 			case 'SubmitAttempt':
 				var puzzle = msg.a;
 				var modelWithNoProblems = _Utils_update(
 					model,
 					{guessForPuzzleProblems: _List_Nil, guessProblems: _List_Nil});
-				var _v2 = $author$project$Nineagram$Guess$fromString(
-					$elm$core$String$trim(model.typingGuess));
-				if (_v2.$ === 'Err') {
-					var guessProblems = _v2.a;
-					return _Utils_update(
-						modelWithNoProblems,
-						{guessProblems: guessProblems});
-				} else {
-					var newGuess = _v2.a;
-					var _v3 = A2($author$project$Nineagram$validateGuess, puzzle, newGuess);
-					if (_v3.$ === 'Err') {
-						var problems = _v3.a;
-						return _Utils_update(
-							modelWithNoProblems,
-							{guessForPuzzleProblems: problems});
-					} else {
-						var _v4 = model.currentAttempt;
-						if (_v4.$ === 'OneGuess') {
-							var firstGuess = _v4.a;
-							var newAttempt = A3($author$project$Nineagram$isSolution, puzzle, firstGuess, newGuess) ? A2($author$project$Main$TwoGuesses, firstGuess, newGuess) : $author$project$Main$OneGuess(newGuess);
+				return _Utils_Tuple2(
+					function () {
+						var _v2 = $author$project$Nineagram$Guess$fromString(
+							$elm$core$String$trim(model.typingGuess));
+						if (_v2.$ === 'Err') {
+							var guessProblems = _v2.a;
 							return _Utils_update(
 								modelWithNoProblems,
-								{
-									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
-									currentAttempt: newAttempt,
-									typingGuess: ''
-								});
+								{guessProblems: guessProblems});
 						} else {
-							var newAttempt = $author$project$Main$OneGuess(newGuess);
-							return _Utils_update(
-								modelWithNoProblems,
-								{
-									attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
-									currentAttempt: newAttempt,
-									typingGuess: ''
-								});
+							var newGuess = _v2.a;
+							var _v3 = A2($author$project$Nineagram$validateGuess, puzzle, newGuess);
+							if (_v3.$ === 'Err') {
+								var problems = _v3.a;
+								return _Utils_update(
+									modelWithNoProblems,
+									{guessForPuzzleProblems: problems});
+							} else {
+								var _v4 = model.currentAttempt;
+								if (_v4.$ === 'OneGuess') {
+									var firstGuess = _v4.a;
+									var newAttempt = A3($author$project$Nineagram$isSolution, puzzle, firstGuess, newGuess) ? A2($author$project$Main$TwoGuesses, firstGuess, newGuess) : $author$project$Main$OneGuess(newGuess);
+									return _Utils_update(
+										modelWithNoProblems,
+										{
+											attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
+											currentAttempt: newAttempt,
+											typingGuess: ''
+										});
+								} else {
+									var newAttempt = $author$project$Main$OneGuess(newGuess);
+									return _Utils_update(
+										modelWithNoProblems,
+										{
+											attempts: A2($elm$core$List$cons, newAttempt, model.attempts),
+											currentAttempt: newAttempt,
+											typingGuess: ''
+										});
+								}
+							}
 						}
-					}
-				}
+					}(),
+					$elm$core$Platform$Cmd$none);
 			case 'SelectAttempt':
 				var attempt = msg.a;
-				return _Utils_update(
-					model,
-					{currentAttempt: attempt});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{currentAttempt: attempt}),
+					$elm$core$Platform$Cmd$none);
 			case 'DeleteAttempt':
 				var attempt = msg.a;
-				return _Utils_update(
-					model,
-					{
-						attempts: A2(
-							$elm$core$List$filter,
-							function (a) {
-								return !_Utils_eq(a, attempt);
-							},
-							model.attempts),
-						currentAttempt: _Utils_eq(model.currentAttempt, attempt) ? model.defaultAttempt : model.currentAttempt
-					});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							attempts: A2(
+								$elm$core$List$filter,
+								function (a) {
+									return !_Utils_eq(a, attempt);
+								},
+								model.attempts),
+							currentAttempt: _Utils_eq(model.currentAttempt, attempt) ? model.defaultAttempt : model.currentAttempt
+						}),
+					$elm$core$Platform$Cmd$none);
 			case 'EnableCheat':
-				return _Utils_update(
-					model,
-					{cheat: true});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{cheat: true}),
+					$elm$core$Platform$Cmd$none);
 			case 'SelectDefaultAttempt':
-				return _Utils_update(
-					model,
-					{currentAttempt: model.defaultAttempt});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{currentAttempt: model.defaultAttempt}),
+					$elm$core$Platform$Cmd$none);
 			default:
-				return $author$project$Main$init;
+				return _Utils_Tuple2($author$project$Main$init, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$EnableCheat = {$: 'EnableCheat'};
@@ -12292,6 +12326,7 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$input,
 								_List_fromArray(
 									[
+										$elm$html$Html$Attributes$id('guess'),
 										$elm$html$Html$Attributes$name('guess'),
 										$elm$html$Html$Attributes$class('lettersInput'),
 										$elm$html$Html$Attributes$autocomplete(false),
@@ -12364,7 +12399,16 @@ var $author$project$Main$view = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$main = $elm$browser$Browser$sandbox(
-	{init: $author$project$Main$init, update: $author$project$Main$update, view: $author$project$Main$view});
+var $author$project$Main$main = $elm$browser$Browser$element(
+	{
+		init: function (flags) {
+			return _Utils_Tuple2($author$project$Main$init, $elm$core$Platform$Cmd$none);
+		},
+		subscriptions: function (model) {
+			return $elm$core$Platform$Sub$none;
+		},
+		update: $author$project$Main$update,
+		view: $author$project$Main$view
+	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{},"unions":{"Main.Msg":{"args":[],"tags":{"TypedPuzzleLetters":["String.String"],"SubmitPuzzleLetters":[],"Reset":[],"TypingGuess":["String.String"],"SubmitAttempt":["Nineagram.NineagramPuzzle"],"SelectAttempt":["Main.Attempt"],"SelectDefaultAttempt":[],"DeleteAttempt":["Main.Attempt"],"EnableCheat":[]}},"Main.Attempt":{"args":[],"tags":{"NoGuesses":[],"OneGuess":["Nineagram.Guess.Guess"],"TwoGuesses":["Nineagram.Guess.Guess","Nineagram.Guess.Guess"]}},"Nineagram.NineagramPuzzle":{"args":[],"tags":{"NineagramPuzzle":["List.List Char.Char"]}},"String.String":{"args":[],"tags":{"String":[]}},"Char.Char":{"args":[],"tags":{"Char":[]}},"Nineagram.Guess.Guess":{"args":[],"tags":{"Guess":["String.String"]}},"List.List":{"args":["a"],"tags":{}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{},"unions":{"Main.Msg":{"args":[],"tags":{"Focussed":["String.String","Result.Result Browser.Dom.Error ()"],"TypedPuzzleLetters":["String.String"],"SubmitPuzzleLetters":[],"Reset":[],"TypingGuess":["String.String"],"SubmitAttempt":["Nineagram.NineagramPuzzle"],"SelectAttempt":["Main.Attempt"],"SelectDefaultAttempt":[],"DeleteAttempt":["Main.Attempt"],"EnableCheat":[]}},"Main.Attempt":{"args":[],"tags":{"NoGuesses":[],"OneGuess":["Nineagram.Guess.Guess"],"TwoGuesses":["Nineagram.Guess.Guess","Nineagram.Guess.Guess"]}},"Browser.Dom.Error":{"args":[],"tags":{"NotFound":["String.String"]}},"Nineagram.NineagramPuzzle":{"args":[],"tags":{"NineagramPuzzle":["List.List Char.Char"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Char.Char":{"args":[],"tags":{"Char":[]}},"Nineagram.Guess.Guess":{"args":[],"tags":{"Guess":["String.String"]}},"List.List":{"args":["a"],"tags":{}}}}})}});}(this));

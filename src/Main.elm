@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom
 import Cheat
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -9,6 +10,7 @@ import Html.Lazy
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess exposing (Guess)
+import Task
 
 
 {-| The goal in solving a Nineagram puzzle is to find two five-letter words
@@ -31,8 +33,9 @@ its own word list.
 -}
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = init
+    Browser.element
+        { init = \flags -> ( init, Cmd.none )
+        , subscriptions = \model -> Sub.none
         , update = update
         , view = view
         }
@@ -82,7 +85,8 @@ init =
 
 
 type Msg
-    = TypedPuzzleLetters String
+    = Focussed String (Result Browser.Dom.Error ())
+    | TypedPuzzleLetters String
     | SubmitPuzzleLetters
     | Reset
     | TypingGuess String
@@ -93,14 +97,19 @@ type Msg
     | EnableCheat
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Focussed what result ->
+            ( model, Cmd.none )
+
         TypedPuzzleLetters letters ->
-            { model | letters = letters |> String.toUpper }
+            ( { model | letters = letters |> String.toUpper }
+            , Cmd.none
+            )
 
         SubmitPuzzleLetters ->
-            case Nineagram.fromString model.letters of
+            ( case Nineagram.fromString model.letters of
                 Ok puzzle ->
                     { init
                         | puzzle = Just puzzle
@@ -110,16 +119,20 @@ update msg model =
 
                 Err problems ->
                     { model | problems = problems }
+            , Task.attempt (Focussed "guess") <| Browser.Dom.focus "guess"
+            )
 
         TypingGuess typing ->
-            { model | typingGuess = String.toUpper typing }
+            ( { model | typingGuess = String.toUpper typing }
+            , Cmd.none
+            )
 
         SubmitAttempt puzzle ->
             let
                 modelWithNoProblems =
                     { model | guessProblems = [], guessForPuzzleProblems = [] }
             in
-            case Nineagram.Guess.fromString (String.trim model.typingGuess) of
+            ( case Nineagram.Guess.fromString (String.trim model.typingGuess) of
                 Err guessProblems ->
                     { modelWithNoProblems | guessProblems = guessProblems }
 
@@ -155,12 +168,16 @@ update msg model =
                                         , currentAttempt = newAttempt
                                         , typingGuess = ""
                                     }
+            , Cmd.none
+            )
 
         SelectAttempt attempt ->
-            { model | currentAttempt = attempt }
+            ( { model | currentAttempt = attempt }
+            , Cmd.none
+            )
 
         DeleteAttempt attempt ->
-            { model
+            ( { model
                 | attempts = model.attempts |> List.filter (\a -> a /= attempt)
                 , currentAttempt =
                     if model.currentAttempt == attempt then
@@ -168,16 +185,22 @@ update msg model =
 
                     else
                         model.currentAttempt
-            }
+              }
+            , Cmd.none
+            )
 
         EnableCheat ->
-            { model | cheat = True }
+            ( { model | cheat = True }
+            , Cmd.none
+            )
 
         SelectDefaultAttempt ->
-            { model | currentAttempt = model.defaultAttempt }
+            ( { model | currentAttempt = model.defaultAttempt }
+            , Cmd.none
+            )
 
         Reset ->
-            init
+            ( init, Cmd.none )
 
 
 onKeyHandler : NineagramPuzzle -> Attribute Msg
@@ -251,7 +274,8 @@ view model =
                 [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
                 , br [] []
                 , input
-                    [ name "guess"
+                    [ id "guess"
+                    , name "guess"
                     , class "lettersInput"
                     , autocomplete False
                     , spellcheck False
