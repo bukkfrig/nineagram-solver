@@ -90,7 +90,7 @@ type Msg
     | SubmitPuzzleLetters
     | Reset
     | TypingGuess String
-    | SubmitAttempt NineagramPuzzle
+    | SubmitAttempt NineagramPuzzle String
     | SelectAttempt Attempt
     | SelectDefaultAttempt
     | DeleteAttempt Attempt
@@ -101,75 +101,34 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Focussed what result ->
+            -- NoOp, but the debugger will show what was focussed and whether it worked
             ( model, Cmd.none )
 
         TypedPuzzleLetters letters ->
-            ( { model | letters = letters |> String.toUpper }
-            , Cmd.none
-            )
+            ( { model | letters = letters |> String.toUpper }, Cmd.none )
 
         SubmitPuzzleLetters ->
-            ( case Nineagram.fromString model.letters of
+            case Nineagram.fromString model.letters of
                 Ok puzzle ->
-                    { init
-                        | puzzle = Just puzzle
-                        , attempts = []
-                        , letters = String.toUpper model.letters
-                    }
+                    startSolving puzzle
 
                 Err problems ->
-                    { model | problems = problems }
-            , Task.attempt (Focussed "guess") <| Browser.Dom.focus "guess"
-            )
+                    ( { model | problems = problems }, Cmd.none )
 
         TypingGuess typing ->
-            ( { model | typingGuess = String.toUpper typing }
-            , Cmd.none
-            )
+            ( { model | typingGuess = String.toUpper typing }, Cmd.none )
 
-        SubmitAttempt puzzle ->
-            let
-                modelWithNoProblems =
-                    { model | guessProblems = [], guessForPuzzleProblems = [] }
-            in
-            ( case Nineagram.Guess.fromString (String.trim model.typingGuess) of
+        SubmitAttempt puzzle typed ->
+            case Nineagram.Guess.fromString (String.trim typed) of
                 Err guessProblems ->
-                    { modelWithNoProblems | guessProblems = guessProblems }
+                    ( { model | guessProblems = guessProblems, guessForPuzzleProblems = [] }
+                    , Cmd.none
+                    )
 
                 Ok newGuess ->
-                    case Nineagram.validateGuess puzzle newGuess of
-                        Err problems ->
-                            { modelWithNoProblems | guessForPuzzleProblems = problems }
-
-                        Ok () ->
-                            case model.currentAttempt of
-                                OneGuess firstGuess ->
-                                    let
-                                        newAttempt =
-                                            if Nineagram.isSolution puzzle firstGuess newGuess then
-                                                TwoGuesses firstGuess newGuess
-
-                                            else
-                                                OneGuess newGuess
-                                    in
-                                    { modelWithNoProblems
-                                        | attempts = newAttempt :: model.attempts
-                                        , currentAttempt = newAttempt
-                                        , typingGuess = ""
-                                    }
-
-                                _ ->
-                                    let
-                                        newAttempt =
-                                            OneGuess newGuess
-                                    in
-                                    { modelWithNoProblems
-                                        | attempts = newAttempt :: model.attempts
-                                        , currentAttempt = newAttempt
-                                        , typingGuess = ""
-                                    }
-            , Cmd.none
-            )
+                    ( addGuess { model | guessProblems = [] } puzzle newGuess
+                    , Cmd.none
+                    )
 
         SelectAttempt attempt ->
             ( { model | currentAttempt = attempt }
@@ -203,32 +162,73 @@ update msg model =
             ( init, Cmd.none )
 
 
-onKeyHandler : NineagramPuzzle -> Attribute Msg
-onKeyHandler puzzle =
-    let
-        keyCodeDecoder =
-            Html.Events.keyCode
+startSolving : NineagramPuzzle -> ( Model, Cmd Msg )
+startSolving puzzle =
+    ( { init
+        | puzzle = Just puzzle
+        , letters =
+            puzzle
+                |> Nineagram.getLetters
+                |> String.fromList
+                |> String.toUpper
+      }
+    , focus "guess"
+    )
 
-        chooseMessage : Int -> Json.Decode.Decoder Msg
-        chooseMessage code =
+
+focus : String -> Cmd Msg
+focus id =
+    Task.attempt (Focussed id) (Browser.Dom.focus id)
+
+
+addGuess : Model -> NineagramPuzzle -> Guess -> Model
+addGuess model puzzle guess =
+    case Nineagram.validateGuess puzzle guess of
+        Err problems ->
+            { model | guessForPuzzleProblems = problems }
+
+        Ok () ->
             let
-                enter =
-                    13
+                newAttempt =
+                    case model.currentAttempt of
+                        OneGuess firstGuess ->
+                            if Nineagram.isSolution puzzle firstGuess guess then
+                                TwoGuesses firstGuess guess
 
-                escape =
-                    27
+                            else
+                                OneGuess guess
+
+                        _ ->
+                            OneGuess guess
             in
-            if code == enter then
-                Json.Decode.succeed <| SubmitAttempt puzzle
+            { model
+                | guessForPuzzleProblems = []
+                , attempts = newAttempt :: model.attempts
+                , currentAttempt = newAttempt
+                , typingGuess = ""
+            }
 
-            else if code == escape then
-                Json.Decode.succeed SelectDefaultAttempt
 
-            else
-                Json.Decode.fail "other key"
-    in
-    -- Json.Decode.andThen : (a -> Decoder b) -> Decoder a -> Decoder b
-    on "keydown" (keyCodeDecoder |> Json.Decode.andThen chooseMessage)
+keyHandlers : Model -> List (Attribute Msg)
+keyHandlers model =
+    case model.puzzle of
+        Just puzzle ->
+            [ on "keydown"
+                (Html.Events.keyCode
+                    |> Json.Decode.andThen
+                        (\keyCode ->
+                            {- esc -}
+                            if keyCode == 27 then
+                                Json.Decode.succeed SelectDefaultAttempt
+
+                            else
+                                Json.Decode.fail "other key"
+                        )
+                )
+            ]
+
+        Nothing ->
+            []
 
 
 
@@ -241,69 +241,65 @@ view model =
         puzzle =
             Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
     in
-    div [ class "nineagramSolver" ]
-        [ div []
-            [ Html.form [ class "puzzleform", onSubmit SubmitPuzzleLetters ]
-                [ div [ class "lettersInput" ]
-                    [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
-                    , br [] []
-                    , input
-                        [ type_ "text"
-                        , id "puzzleLetters"
-                        , class "lettersInput"
-                        , onInput TypedPuzzleLetters
-                        , spellcheck False
-                        , autocomplete False
-                        , value model.letters
-                        , disabled (model.puzzle /= Nothing)
-                        ]
-                        []
-                    , div [ class "creationProblems" ] [ viewCreationProblems model.problems ]
-                    ]
-                , div []
-                    [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
-                    ]
-                , div []
-                    [ button [ onClick Reset, type_ "button" ] [ text "Clear" ]
-                    ]
-                ]
-            ]
-        , div [ onKeyHandler puzzle ]
-            [ div [] [ viewNineagram puzzle model.currentAttempt ]
-            , Html.form [ onSubmit <| SubmitAttempt puzzle, class "guessForm" ]
-                [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
+    div ([ class "nineagramSolver" ] ++ keyHandlers model)
+        [ Html.form [ class "puzzleform", onSubmit SubmitPuzzleLetters ]
+            [ div [ class "lettersInput" ]
+                [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
                 , br [] []
                 , input
-                    [ id "guess"
-                    , name "guess"
+                    [ type_ "text"
+                    , id "puzzleLetters"
                     , class "lettersInput"
-                    , autocomplete False
+                    , onInput TypedPuzzleLetters
                     , spellcheck False
-                    , disabled (model.puzzle == Nothing)
-                    , value model.typingGuess
-                    , onInput TypingGuess
+                    , autocomplete False
+                    , value model.letters
+                    , disabled (model.puzzle /= Nothing)
                     ]
                     []
-                , div [ class "guessProblems" ]
-                    [ viewGuessProblems model.guessProblems
-                    , viewGuessForPuzzleProblems model.guessForPuzzleProblems
-                    ]
-                , button [] [ text "Guess" ]
+                , div [ class "creationProblems" ] [ viewCreationProblems model.problems ]
                 ]
-            , div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
-            , div [ class "cheat" ]
-                [ text "All solutions:"
-                , if model.cheat then
-                    Html.Lazy.lazy viewCheatSolutions puzzle
+            , div []
+                [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
+                ]
+            , div []
+                [ button [ onClick Reset, type_ "button" ] [ text "Clear" ]
+                ]
+            ]
+        , div [] [ viewNineagram puzzle model.currentAttempt ]
+        , Html.form [ onSubmit <| SubmitAttempt puzzle model.typingGuess, class "guessForm" ]
+            [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
+            , br [] []
+            , input
+                [ id "guess"
+                , name "guess"
+                , class "lettersInput"
+                , autocomplete False
+                , spellcheck False
+                , disabled (model.puzzle == Nothing)
+                , value model.typingGuess
+                , onInput TypingGuess
+                ]
+                []
+            , div [ class "guessProblems" ]
+                [ viewGuessProblems model.guessProblems
+                , viewGuessForPuzzleProblems model.guessForPuzzleProblems
+                ]
+            , button [] [ text "Guess" ]
+            ]
+        , div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
+        , div [ class "cheat" ]
+            [ text "All solutions:"
+            , if model.cheat then
+                Html.Lazy.lazy viewCheatSolutions puzzle
 
-                  else
-                    button
-                        [ type_ "button"
-                        , onClick EnableCheat
-                        , disabled (model.puzzle == Nothing)
-                        ]
-                        [ text "Cheat" ]
-                ]
+                else
+                button
+                    [ type_ "button"
+                    , onClick EnableCheat
+                    , disabled (model.puzzle == Nothing)
+                    ]
+                    [ text "Cheat" ]
             ]
         , h1 [] [ text "Nineagram Solver" ]
         ]
