@@ -293,7 +293,7 @@ view model =
             , if model.cheat then
                 Html.Lazy.lazy viewCheatSolutions puzzle
 
-                else
+              else
                 button
                     [ type_ "button"
                     , onClick EnableCheat
@@ -383,13 +383,13 @@ viewAttempt puzzle attempt =
                 , text <| String.toUpper <| String.left 2 remaining
                 , b [] [ text <| String.toUpper <| middleLetter ]
                 , text <| String.toUpper <| String.right 2 remaining
-                , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
+                , button [ stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
             div [ class "attempt", class "twoguesses", onClick (SelectAttempt attempt) ]
                 [ b [] [ text <| String.toUpper <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ]
-                , button [ onClick (DeleteAttempt attempt) ] [ text "X" ]
+                , button [ stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
                 ]
 
 

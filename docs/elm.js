@@ -5919,8 +5919,13 @@ var $author$project$Main$viewAttempt = F2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Main$DeleteAttempt(attempt))
+									A2(
+									$elm$html$Html$Events$stopPropagationOn,
+									'click',
+									$elm$json$Json$Decode$succeed(
+										_Utils_Tuple2(
+											$author$project$Main$DeleteAttempt(attempt),
+											true)))
 								]),
 							_List_fromArray(
 								[
@@ -5954,8 +5959,13 @@ var $author$project$Main$viewAttempt = F2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Main$DeleteAttempt(attempt))
+									A2(
+									$elm$html$Html$Events$stopPropagationOn,
+									'click',
+									$elm$json$Json$Decode$succeed(
+										_Utils_Tuple2(
+											$author$project$Main$DeleteAttempt(attempt),
+											true)))
 								]),
 							_List_fromArray(
 								[
