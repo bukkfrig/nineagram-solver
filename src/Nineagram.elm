@@ -2,15 +2,15 @@ module Nineagram exposing
     ( CreationProblem(..)
     , GuessProblem(..)
     , NineagramPuzzle
+    , defaultPuzzle
     , fromCharList
     , fromString
     , getLetters
     , hasSolutions
     , isSolution
-    , validateGuess
     , remainingLetters
     , solutions
-    , defaultPuzzle
+    , validateGuess
     )
 
 import Nineagram.Guess exposing (Guess)
@@ -19,39 +19,42 @@ import Nineagram.Guess exposing (Guess)
 type NineagramPuzzle
     = NineagramPuzzle (List Char)
 
-defaultPuzzle: NineagramPuzzle
-defaultPuzzle = NineagramPuzzle <| String.toList "GRNAMNIEA"
+
+defaultPuzzle : NineagramPuzzle
+defaultPuzzle =
+    NineagramPuzzle <| String.toList "GRNAMNIEA"
 
 
 fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
 fromCharList letters =
     let
+        checks =
+            let
+                length =
+                    List.length letters
+            in
+            [ case List.filter (not << Char.isAlpha) letters of
+                x :: xs ->
+                    Just <| ContainsNonAlphaCharacters x xs
+
+                [] ->
+                    Nothing
+            , if length < 9 then
+                Just <| LettersTooFew length
+
+              else if length > 9 then
+                Just <| LettersTooMany length
+
+              else
+                Nothing
+            ]
+
         problems =
-            []
-                ++ (case List.filter (\c -> not <| Char.isAlpha c) letters of
-                        [] ->
-                            []
-
-                        x :: xs ->
-                            [ ContainsNonAlphaCharacters x xs ]
-                   )
-                ++ (let
-                        length =
-                            List.length letters
-                    in
-                    if length < 9 then
-                        [ LettersTooFew length ]
-
-                    else if length > 9 then
-                        [ LettersTooMany length ]
-
-                    else
-                        []
-                   )
+            List.filterMap identity checks
     in
     case problems of
         [] ->
-            Ok <| NineagramPuzzle <| List.map Char.toLower letters
+            Ok <| NineagramPuzzle (List.map Char.toLower letters)
 
         _ ->
             Err problems
@@ -112,6 +115,7 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
 
 type GuessProblem
     = LetterNotFound Char
+
 
 validateGuess : NineagramPuzzle -> Guess -> Result (List GuessProblem) ()
 validateGuess nineagram guess =

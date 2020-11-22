@@ -552,13 +552,20 @@ viewSolutions puzzle =
                 |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
                 |> List.filter (\guess -> Nineagram.validateGuess puzzle guess == Ok ())
 
-        viewSolutionsForGuess guess =
+        displayGuess guess =
             case Nineagram.solutions puzzle cheatGuesses guess of
                 [] ->
                     Nothing
 
                 solutions ->
-                    Just <| li [] [ text (Nineagram.Guess.toString guess ++ " (" ++ (solutions |> List.map Nineagram.Guess.toString |> String.join ", ") ++ ")") ]
+                    (Just << li [])
+                        [ (text << String.join "")
+                            [ Nineagram.Guess.toString guess
+                            , " "
+                            , "("
+                            , String.join ", " (List.map Nineagram.Guess.toString solutions)
+                            , ")"
+                            ]
+                        ]
     in
-    List.filterMap viewSolutionsForGuess cheatGuesses
-        |> ul []
+    ul [] (List.filterMap displayGuess cheatGuesses)
