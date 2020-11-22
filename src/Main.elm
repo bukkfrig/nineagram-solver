@@ -121,42 +121,33 @@ update msg model =
         SubmitAttempt puzzle typed ->
             case Nineagram.Guess.fromString (String.trim typed) of
                 Err guessProblems ->
-                    ( { model | guessProblems = guessProblems, guessForPuzzleProblems = [] }
-                    , Cmd.none
-                    )
+                    ( { model | guessProblems = guessProblems, guessForPuzzleProblems = [] }, Cmd.none )
 
                 Ok newGuess ->
-                    ( addGuess { model | guessProblems = [] } puzzle newGuess
-                    , Cmd.none
-                    )
+                    ( addGuess { model | guessProblems = [] } puzzle newGuess, Cmd.none )
 
         SelectAttempt attempt ->
-            ( { model | currentAttempt = attempt }
-            , Cmd.none
-            )
+            ( { model | currentAttempt = attempt }, Cmd.none )
 
         DeleteAttempt attempt ->
-            ( { model
-                | attempts = model.attempts |> List.filter (\a -> a /= attempt)
-                , currentAttempt =
+            let
+                attempts =
+                    model.attempts |> List.filter (\a -> a /= attempt)
+
+                currentAttempt =
                     if model.currentAttempt == attempt then
                         model.defaultAttempt
 
                     else
                         model.currentAttempt
-              }
-            , Cmd.none
-            )
+            in
+            ( { model | attempts = attempts, currentAttempt = currentAttempt }, Cmd.none )
 
         EnableCheat ->
-            ( { model | cheat = True }
-            , Cmd.none
-            )
+            ( { model | cheat = True }, Cmd.none )
 
         SelectDefaultAttempt ->
-            ( { model | currentAttempt = model.defaultAttempt }
-            , Cmd.none
-            )
+            ( { model | currentAttempt = model.defaultAttempt }, Cmd.none )
 
         Reset ->
             ( init, Cmd.none )
@@ -164,16 +155,14 @@ update msg model =
 
 startSolving : NineagramPuzzle -> ( Model, Cmd Msg )
 startSolving puzzle =
-    ( { init
-        | puzzle = Just puzzle
-        , letters =
+    let
+        letters =
             puzzle
                 |> Nineagram.getLetters
                 |> String.fromList
                 |> String.toUpper
-      }
-    , focus "guess"
-    )
+    in
+    ( { init | puzzle = Just puzzle, letters = letters }, focus "guess" )
 
 
 focus : String -> Cmd Msg

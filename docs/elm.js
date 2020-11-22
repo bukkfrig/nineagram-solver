@@ -5540,13 +5540,14 @@ var $author$project$Nineagram$getLetters = function (_v0) {
 };
 var $elm$core$String$toUpper = _String_toUpper;
 var $author$project$Main$startSolving = function (puzzle) {
+	var letters = $elm$core$String$toUpper(
+		$elm$core$String$fromList(
+			$author$project$Nineagram$getLetters(puzzle)));
 	return _Utils_Tuple2(
 		_Utils_update(
 			$author$project$Main$init,
 			{
-				A: $elm$core$String$toUpper(
-					$elm$core$String$fromList(
-						$author$project$Nineagram$getLetters(puzzle))),
+				A: letters,
 				n: $elm$core$Maybe$Just(puzzle)
 			}),
 		$author$project$Main$focus('guess'));
@@ -5623,18 +5624,17 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 8:
 				var attempt = msg.a;
+				var currentAttempt = _Utils_eq(model.j, attempt) ? model.M : model.j;
+				var attempts = A2(
+					$elm$core$List$filter,
+					function (a) {
+						return !_Utils_eq(a, attempt);
+					},
+					model.t);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							t: A2(
-								$elm$core$List$filter,
-								function (a) {
-									return !_Utils_eq(a, attempt);
-								},
-								model.t),
-							j: _Utils_eq(model.j, attempt) ? model.M : model.j
-						}),
+						{t: attempts, j: currentAttempt}),
 					$elm$core$Platform$Cmd$none);
 			case 9:
 				return _Utils_Tuple2(
