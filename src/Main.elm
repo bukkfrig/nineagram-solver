@@ -414,7 +414,7 @@ viewNineagram puzzle attempt =
             viewNineagramOneGuess puzzle guess
 
         TwoGuesses firstGuess secondGuess ->
-            viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess )
+            viewNineagramTwoGuesses puzzle firstGuess secondGuess
 
 
 viewNineagramNoGuesses : NineagramPuzzle -> Html Msg
@@ -487,8 +487,8 @@ viewNineagramOneGuess puzzle guess =
         ]
 
 
-viewNineagramTwoGuesses : NineagramPuzzle -> ( Guess, Guess ) -> Html Msg
-viewNineagramTwoGuesses puzzle ( firstGuess, secondGuess ) =
+viewNineagramTwoGuesses : NineagramPuzzle -> Guess -> Guess -> Html Msg
+viewNineagramTwoGuesses puzzle firstGuess secondGuess =
     let
         letter n =
             ""
