@@ -87,7 +87,7 @@ init =
 type Msg
     = Focussed String (Result Browser.Dom.Error ())
     | TypedPuzzleLetters String
-    | SubmitPuzzleLetters
+    | SubmitPuzzleLetters String
     | Reset
     | TypingGuess String
     | SubmitAttempt NineagramPuzzle String
@@ -107,8 +107,8 @@ update msg model =
         TypedPuzzleLetters letters ->
             ( { model | letters = letters |> String.toUpper }, Cmd.none )
 
-        SubmitPuzzleLetters ->
-            case Nineagram.fromString model.letters of
+        SubmitPuzzleLetters letters ->
+            case Nineagram.fromString letters of
                 Ok puzzle ->
                     startSolving puzzle
 
@@ -257,7 +257,7 @@ keyHandlers model =
 
 viewPuzzleCreation : Model -> Html Msg
 viewPuzzleCreation model =
-    Html.form [ class "puzzleform", onSubmit SubmitPuzzleLetters ]
+    Html.form [ class "puzzleform", onSubmit (SubmitPuzzleLetters model.letters) ]
         [ div [ class "lettersInput" ]
             [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
             , br [] []

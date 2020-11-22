@@ -5568,7 +5568,8 @@ var $author$project$Main$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 2:
-				var _v1 = $author$project$Nineagram$fromString(model.A);
+				var letters = msg.a;
+				var _v1 = $author$project$Nineagram$fromString(letters);
 				if (!_v1.$) {
 					var puzzle = _v1.a;
 					return $author$project$Main$startSolving(puzzle);
@@ -6937,7 +6938,9 @@ var $author$project$Main$viewNineagram = F2(
 		}
 	});
 var $author$project$Main$Reset = {$: 3};
-var $author$project$Main$SubmitPuzzleLetters = {$: 2};
+var $author$project$Main$SubmitPuzzleLetters = function (a) {
+	return {$: 2, a: a};
+};
 var $author$project$Main$TypedPuzzleLetters = function (a) {
 	return {$: 1, a: a};
 };
@@ -6987,7 +6990,8 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class('puzzleform'),
-				$elm$html$Html$Events$onSubmit($author$project$Main$SubmitPuzzleLetters)
+				$elm$html$Html$Events$onSubmit(
+				$author$project$Main$SubmitPuzzleLetters(model.A))
 			]),
 		_List_fromArray(
 			[
