@@ -543,7 +543,7 @@ viewAllSolutions model puzzle =
     div [ class "cheat" ]
         [ text "All solutions:"
         , if model.cheat then
-            Html.Lazy.lazy viewCheatSolutions puzzle
+            Html.Lazy.lazy viewSolutions puzzle
 
           else
             button
@@ -555,34 +555,21 @@ viewAllSolutions model puzzle =
         ]
 
 
-viewCheatSolutions : NineagramPuzzle -> Html Msg
-viewCheatSolutions puzzle =
+viewSolutions : NineagramPuzzle -> Html Msg
+viewSolutions puzzle =
     let
         cheatGuesses =
             Cheat.cheatWords
                 |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
                 |> List.filter (\guess -> Nineagram.validateGuess puzzle guess == Ok ())
-    in
-    viewSolutions puzzle cheatGuesses
-
-
-viewSolutions : NineagramPuzzle -> List Guess -> Html Msg
-viewSolutions puzzle guesses =
-    let
-        hasSolutions =
-            Nineagram.hasSolutions puzzle guesses
-
-        solutions =
-            Nineagram.solutions puzzle guesses
-
-        isValid guess =
-            Nineagram.validateGuess puzzle guess == Ok ()
 
         viewSolutionsForGuess guess =
-            if isValid guess && hasSolutions guess then
-                li [] [ text (Nineagram.Guess.toString guess ++ " (" ++ (solutions guess |> List.map Nineagram.Guess.toString |> String.join ", ") ++ ")") ]
+            case Nineagram.solutions puzzle cheatGuesses guess of
+                [] ->
+                    Nothing
 
-            else
-                text ""
+                solutions ->
+                    Just <| li [] [ text (Nineagram.Guess.toString guess ++ " (" ++ (solutions |> List.map Nineagram.Guess.toString |> String.join ", ") ++ ")") ]
     in
-    ul [] <| List.map viewSolutionsForGuess guesses
+    List.filterMap viewSolutionsForGuess cheatGuesses
+        |> ul []

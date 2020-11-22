@@ -5742,44 +5742,6 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var $elm$core$Result$toMaybe = function (result) {
-	if (!result.$) {
-		var v = result.a;
-		return $elm$core$Maybe$Just(v);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $author$project$Nineagram$hasSolutions = F3(
-	function (nineagram, earlierGuesses, guess) {
-		return A2(
-			$elm$core$List$any,
-			function (earlierGuess) {
-				return A3($author$project$Nineagram$isSolution, nineagram, earlierGuess, guess);
-			},
-			earlierGuesses);
-	});
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $author$project$Nineagram$solutions = F3(
 	function (nineagram, guesses, guess) {
@@ -5788,38 +5750,16 @@ var $author$project$Nineagram$solutions = F3(
 			A2($author$project$Nineagram$isSolution, nineagram, guess),
 			guesses);
 	});
+var $elm$core$Result$toMaybe = function (result) {
+	if (!result.$) {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$viewSolutions = F2(
-	function (puzzle, guesses) {
-		var solutions = A2($author$project$Nineagram$solutions, puzzle, guesses);
-		var isValid = function (guess) {
-			return _Utils_eq(
-				A2($author$project$Nineagram$validateGuess, puzzle, guess),
-				$elm$core$Result$Ok(0));
-		};
-		var hasSolutions = A2($author$project$Nineagram$hasSolutions, puzzle, guesses);
-		var viewSolutionsForGuess = function (guess) {
-			return (isValid(guess) && hasSolutions(guess)) ? A2(
-				$elm$html$Html$li,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$author$project$Nineagram$Guess$toString(guess) + (' (' + (A2(
-							$elm$core$String$join,
-							', ',
-							A2(
-								$elm$core$List$map,
-								$author$project$Nineagram$Guess$toString,
-								solutions(guess))) + ')')))
-					])) : $elm$html$Html$text('');
-		};
-		return A2(
-			$elm$html$Html$ul,
-			_List_Nil,
-			A2($elm$core$List$map, viewSolutionsForGuess, guesses));
-	});
-var $author$project$Main$viewCheatSolutions = function (puzzle) {
+var $author$project$Main$viewSolutions = function (puzzle) {
 	var cheatGuesses = A2(
 		$elm$core$List$filter,
 		function (guess) {
@@ -5831,7 +5771,30 @@ var $author$project$Main$viewCheatSolutions = function (puzzle) {
 			$elm$core$List$filterMap,
 			A2($elm$core$Basics$composeL, $elm$core$Result$toMaybe, $author$project$Nineagram$Guess$fromString),
 			$author$project$Cheat$cheatWords));
-	return A2($author$project$Main$viewSolutions, puzzle, cheatGuesses);
+	var viewSolutionsForGuess = function (guess) {
+		var _v0 = A3($author$project$Nineagram$solutions, puzzle, cheatGuesses, guess);
+		if (!_v0.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var solutions = _v0;
+			return $elm$core$Maybe$Just(
+				A2(
+					$elm$html$Html$li,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$author$project$Nineagram$Guess$toString(guess) + (' (' + (A2(
+								$elm$core$String$join,
+								', ',
+								A2($elm$core$List$map, $author$project$Nineagram$Guess$toString, solutions)) + ')')))
+						])));
+		}
+	};
+	return A2(
+		$elm$html$Html$ul,
+		_List_Nil,
+		A2($elm$core$List$filterMap, viewSolutionsForGuess, cheatGuesses));
 };
 var $author$project$Main$viewAllSolutions = F2(
 	function (model, puzzle) {
@@ -5844,7 +5807,7 @@ var $author$project$Main$viewAllSolutions = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$text('All solutions:'),
-					model.L ? A2($elm$html$Html$Lazy$lazy, $author$project$Main$viewCheatSolutions, puzzle) : A2(
+					model.L ? A2($elm$html$Html$Lazy$lazy, $author$project$Main$viewSolutions, puzzle) : A2(
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
