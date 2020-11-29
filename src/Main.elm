@@ -6,11 +6,11 @@ import Cheat
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Lazy
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess exposing (Guess)
-import Task
+import Process
+import Task exposing (Task)
 
 
 {-| The goal in solving a Nineagram puzzle is to find two five-letter words
@@ -51,6 +51,10 @@ type Attempt
     | TwoGuesses Guess Guess
 
 
+type ComputerSolution
+    = ComputerSolution Guess (List Guess)
+
+
 type alias Model =
     { letters : String
     , problems : List Nineagram.CreationProblem
@@ -62,6 +66,7 @@ type alias Model =
     , defaultAttempt : Attempt
     , typingGuess : String
     , cheat : Bool
+    , computerSolutions : Maybe (List ComputerSolution)
     }
 
 
@@ -77,6 +82,7 @@ init =
     , defaultAttempt = NoGuesses
     , typingGuess = ""
     , cheat = False
+    , computerSolutions = Nothing
     }
 
 
@@ -95,6 +101,7 @@ type Msg
     | SelectDefaultAttempt
     | DeleteAttempt Attempt
     | EnableCheat
+    | ComputerSolved (List ComputerSolution)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -152,6 +159,9 @@ update msg model =
         Reset ->
             ( init, Cmd.none )
 
+        ComputerSolved solutions ->
+            ( { model | computerSolutions = Just solutions }, Cmd.none )
+
 
 startSolving : NineagramPuzzle -> ( Model, Cmd Msg )
 startSolving puzzle =
@@ -162,12 +172,35 @@ startSolving puzzle =
                 |> String.fromList
                 |> String.toUpper
     in
-    ( { init | puzzle = Just puzzle, letters = letters }, focus "guess" )
+    ( { init | puzzle = Just puzzle, letters = letters }
+    , Cmd.batch [ focus "guess", solve ComputerSolved puzzle ]
+    )
 
 
 focus : String -> Cmd Msg
 focus id =
     Task.attempt (Focussed id) (Browser.Dom.focus id)
+
+
+solve : (List ComputerSolution -> msg) -> NineagramPuzzle -> Cmd msg
+solve tagger puzzle =
+    Cheat.cheatWords
+        |> batchedFilterMap 200 (Result.toMaybe << Nineagram.Guess.fromString)
+        |> Task.andThen (batchedFilter 200 (\guess -> Nineagram.validateGuess puzzle guess == Ok ()))
+        |> Task.andThen
+            (\validGuesses ->
+                batchedFilterMap 200
+                    (\guess ->
+                        case Nineagram.solutions puzzle validGuesses guess of
+                            [] ->
+                                Nothing
+
+                            solutions ->
+                                Just <| ComputerSolution guess solutions
+                    )
+                    validGuesses
+            )
+        |> Task.perform tagger
 
 
 addGuess : Model -> NineagramPuzzle -> Guess -> Model
@@ -197,6 +230,59 @@ addGuess model puzzle guess =
                 , typingGuess = ""
             }
 
+-- Helpers for doing Elm Tasks to do Elm computations while occasionally deferring to update the UI.
+--     Thanks Simon of Elm Slack #beginners for the idea and early implementations
+--     Thanks jfmengels of Elm Slack #beginners for help with a bug.
+
+batchedFoldl : Int -> (a -> b -> b) -> b -> List a -> Task Never b
+batchedFoldl batchSize reducer ini list =
+    let
+        batchItems =
+            List.take batchSize list
+
+        remainingItems =
+            List.drop batchSize list
+
+        workResult =
+            List.foldl reducer ini batchItems
+    in
+    case remainingItems of
+        [] ->
+            Task.succeed workResult
+
+        _ ->
+            Process.sleep 0
+                |> Task.andThen (\_ -> batchedFoldl batchSize reducer workResult remainingItems)
+
+
+batchedFilter : Int -> (a -> Bool) -> List a -> Task Never (List a)
+batchedFilter batchSize fn list =
+    batchedFoldl batchSize
+        (\a acc ->
+            if fn a then
+                a :: acc
+
+            else
+                acc
+        )
+        []
+        list
+
+
+batchedFilterMap : Int -> (a -> Maybe b) -> List a -> Task Never (List b)
+batchedFilterMap batchSize fn list =
+    batchedFoldl batchSize
+        (\a acc ->
+            case fn a of
+                Just b ->
+                    b :: acc
+
+                Nothing ->
+                    acc
+        )
+        []
+        list
+
 
 
 -- VIEW
@@ -213,7 +299,7 @@ view model =
         , viewNineagram puzzle model.currentAttempt
         , viewGuessing model puzzle
         , viewAttempts model puzzle
-        , viewAllSolutions model puzzle
+        , viewAllSolutions model
         , h1 [] [ text "Nineagram Solver" ]
         ]
 
@@ -527,45 +613,58 @@ viewAttempt puzzle attempt =
 -- All solutions
 
 
-viewAllSolutions : Model -> NineagramPuzzle -> Html Msg
-viewAllSolutions model puzzle =
-    div [ class "cheat" ]
-        [ text "All solutions:"
-        , if model.cheat then
-            Html.Lazy.lazy viewSolutions puzzle
-
-          else
-            button
-                [ type_ "button"
-                , onClick EnableCheat
-                , disabled (model.puzzle == Nothing)
-                ]
-                [ text "Cheat" ]
-        ]
-
-
-viewSolutions : NineagramPuzzle -> Html Msg
-viewSolutions puzzle =
+viewAllSolutions : Model -> Html Msg
+viewAllSolutions model =
     let
-        cheatGuesses =
-            Cheat.cheatWords
-                |> List.filterMap (Result.toMaybe << Nineagram.Guess.fromString)
-                |> List.filter (\guess -> Nineagram.validateGuess puzzle guess == Ok ())
+        viewComputerSolved computerSolutions =
+            div [ class "cheat" ]
+                [ text <| "The computer found " ++ (String.fromInt << List.length) computerSolutions ++ " solutions. "
+                , br [] []
+                , if not <| model.cheat then
+                    button [ type_ "button", onClick EnableCheat ] [ text "Show me!" ]
 
-        displayGuess guess =
-            case Nineagram.solutions puzzle cheatGuesses guess of
-                [] ->
-                    Nothing
+                  else
+                    viewSolutions computerSolutions
+                ]
 
-                solutions ->
-                    (Just << li [])
-                        [ (text << String.join "")
-                            [ Nineagram.Guess.toString guess
-                            , " "
-                            , "("
-                            , String.join ", " (List.map Nineagram.Guess.toString solutions)
-                            , ")"
-                            ]
-                        ]
+        viewComputerStillSolving =
+            div [ class "cheat" ]
+                [ text "The computer is solving... "
+                , br [] []
+                , button [ type_ "button", disabled True ] [ text "Show me!" ]
+                ]
+
+        viewNoPuzzleYet =
+            div [ class "cheat" ]
+                [ text "The computer will try to solve your puzzle. "
+                , br [] []
+                , button [ type_ "button", disabled True ] [ text "Show me!" ]
+                ]
     in
-    ul [] (List.filterMap displayGuess cheatGuesses)
+    case ( model.puzzle, model.computerSolutions ) of
+        ( Nothing, _ ) ->
+            viewNoPuzzleYet
+
+        ( Just puzzle, Nothing ) ->
+            viewComputerStillSolving
+
+        ( Just puzzle, Just computerSolutions ) ->
+            viewComputerSolved computerSolutions
+
+
+viewSolutions : List ComputerSolution -> Html msg
+viewSolutions computerSolutions =
+    let
+        displaySolution : ComputerSolution -> Html msg
+        displaySolution (ComputerSolution first matching) =
+            li []
+                [ (text << String.join "")
+                    [ Nineagram.Guess.toString first
+                    , " "
+                    , "("
+                    , String.join ", " (List.map Nineagram.Guess.toString matching)
+                    , ")"
+                    ]
+                ]
+    in
+    ul [] (List.map displaySolution computerSolutions)
