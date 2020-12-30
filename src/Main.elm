@@ -34,8 +34,8 @@ its own word list.
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \flags -> ( init, Cmd.none )
-        , subscriptions = \model -> Sub.none
+        { init = \() -> ( init, Cmd.none )
+        , subscriptions = \_ -> Sub.none
         , update = update
         , view = view
         }
@@ -55,7 +55,7 @@ type ComputerSolution
     = ComputerSolution Guess (List Guess)
 
 
-type alias Model =
+type alias State =
     { letters : String
     , problems : List Nineagram.CreationProblem
     , puzzle : Maybe NineagramPuzzle
@@ -70,8 +70,40 @@ type alias Model =
     }
 
 
+type Model
+    = AssertionFailure
+    | AssertOk Constants State
+
+
+type alias Constants =
+    { defaultPuzzle : NineagramPuzzle }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case model of
+        AssertionFailure ->
+            ( model, Cmd.none )
+
+        AssertOk constants state ->
+            case updateState constants msg state of
+                ( newState, commands ) ->
+                    ( AssertOk constants newState, commands )
+
+
 init : Model
 init =
+    case Nineagram.fromString "GRNAMNIEA" of
+        Ok defaultPuzzle ->
+            AssertOk { defaultPuzzle = defaultPuzzle }
+                initState
+
+        Err _ ->
+            AssertionFailure
+
+
+initState : State
+initState =
     { letters = ""
     , problems = []
     , puzzle = Nothing
@@ -104,8 +136,8 @@ type Msg
     | ComputerSolved (List ComputerSolution)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+updateState : Constants -> Msg -> State -> ( State, Cmd Msg )
+updateState _ msg model =
     case msg of
         Focussed what result ->
             -- NoOp, but the debugger will show what was focussed and whether it worked
@@ -157,13 +189,13 @@ update msg model =
             ( { model | currentAttempt = model.defaultAttempt }, Cmd.none )
 
         Reset ->
-            ( init, Cmd.none )
+            ( initState, Cmd.none )
 
         ComputerSolved solutions ->
             ( { model | computerSolutions = Just solutions }, Cmd.none )
 
 
-startSolving : NineagramPuzzle -> ( Model, Cmd Msg )
+startSolving : NineagramPuzzle -> ( State, Cmd Msg )
 startSolving puzzle =
     let
         letters =
@@ -172,7 +204,7 @@ startSolving puzzle =
                 |> String.fromList
                 |> String.toUpper
     in
-    ( { init | puzzle = Just puzzle, letters = letters }
+    ( { initState | puzzle = Just puzzle, letters = letters }
     , Cmd.batch [ focus "guess", solve ComputerSolved puzzle ]
     )
 
@@ -203,7 +235,7 @@ solve tagger puzzle =
         |> Task.perform tagger
 
 
-addGuess : Model -> NineagramPuzzle -> Guess -> Model
+addGuess : State -> NineagramPuzzle -> Guess -> State
 addGuess model puzzle guess =
     case Nineagram.validateGuess puzzle guess of
         Err problems ->
@@ -230,9 +262,12 @@ addGuess model puzzle guess =
                 , typingGuess = ""
             }
 
+
+
 -- Helpers for doing Elm Tasks to do Elm computations while occasionally deferring to update the UI.
 --     Thanks Simon of Elm Slack #beginners for the idea and early implementations
 --     Thanks jfmengels of Elm Slack #beginners for help with a bug.
+
 
 batchedFoldl : Int -> (a -> b -> b) -> b -> List a -> Task Never b
 batchedFoldl batchSize reducer ini list =
@@ -290,9 +325,19 @@ batchedFilterMap batchSize fn list =
 
 view : Model -> Html Msg
 view model =
+    case model of
+        AssertionFailure ->
+            text "Sorry, something went wrong."
+
+        AssertOk constants state ->
+            viewState constants state
+
+
+viewState : Constants -> State -> Html Msg
+viewState { defaultPuzzle } model =
     let
         puzzle =
-            Maybe.withDefault Nineagram.defaultPuzzle model.puzzle
+            Maybe.withDefault defaultPuzzle model.puzzle
     in
     div ([ class "nineagramSolver" ] ++ keyHandlers model)
         [ viewPuzzleCreation model
@@ -304,10 +349,10 @@ view model =
         ]
 
 
-keyHandlers : Model -> List (Attribute Msg)
+keyHandlers : State -> List (Attribute Msg)
 keyHandlers model =
     case model.puzzle of
-        Just puzzle ->
+        Just _ ->
             [ on "keydown"
                 (Html.Events.keyCode
                     |> Json.Decode.andThen
@@ -330,7 +375,7 @@ keyHandlers model =
 -- Creating the puzzle
 
 
-viewPuzzleCreation : Model -> Html Msg
+viewPuzzleCreation : State -> Html Msg
 viewPuzzleCreation model =
     Html.form [ class "puzzleform", onSubmit (SubmitPuzzleLetters model.letters) ]
         [ div [ class "lettersInput" ]
@@ -511,7 +556,7 @@ viewNineagramTwoGuesses puzzle firstGuess secondGuess =
 -- Guessing
 
 
-viewGuessing : Model -> NineagramPuzzle -> Html Msg
+viewGuessing : State -> NineagramPuzzle -> Html Msg
 viewGuessing model puzzle =
     Html.form [ onSubmit <| SubmitAttempt puzzle model.typingGuess, class "guessForm" ]
         [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
@@ -573,7 +618,7 @@ viewGuessForPuzzleProblems problems =
 -- Displaying attempts --
 
 
-viewAttempts : Model -> NineagramPuzzle -> Html Msg
+viewAttempts : State -> NineagramPuzzle -> Html Msg
 viewAttempts model puzzle =
     div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
 
@@ -613,7 +658,7 @@ viewAttempt puzzle attempt =
 -- All solutions
 
 
-viewAllSolutions : Model -> Html Msg
+viewAllSolutions : State -> Html Msg
 viewAllSolutions model =
     let
         viewComputerSolved computerSolutions =

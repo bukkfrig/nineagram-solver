@@ -600,11 +600,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.T.G === region.Y.G)
+	if (region.U.G === region.Z.G)
 	{
-		return 'on line ' + region.T.G;
+		return 'on line ' + region.U.G;
 	}
-	return 'on lines ' + region.T.G + ' through ' + region.Y.G;
+	return 'on lines ' + region.U.G + ' through ' + region.Z.G;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aL,
-		impl.aJ,
+		impl.aE,
+		impl.aM,
+		impl.aK,
 		function() { return function() {} }
 	);
 });
@@ -2660,8 +2660,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		q: func(record.q),
-		U: record.U,
-		R: record.R
+		V: record.V,
+		S: record.S
 	}
 });
 
@@ -2930,10 +2930,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.q;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.U;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.V;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.R) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.S) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3883,11 +3883,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aL,
-		impl.aJ,
+		impl.aE,
+		impl.aM,
+		impl.aK,
 		function(sendToApp, initialModel) {
-			var view = impl.aM;
+			var view = impl.aN;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3919,12 +3919,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aL,
-		impl.aJ,
+		impl.aE,
+		impl.aM,
+		impl.aK,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.S && impl.S(sendToApp)
-			var view = impl.aM;
+			var divertHrefToApp = impl.T && impl.T(sendToApp)
+			var view = impl.aN;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3932,12 +3932,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aw);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.ax);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.aK) && (_VirtualDom_doc.title = title = doc.aK);
+				(title !== doc.aL) && (_VirtualDom_doc.title = title = doc.aL);
 			});
 		}
 	);
@@ -3993,12 +3993,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.aF;
-	var onUrlRequest = impl.aG;
+	var onUrlChange = impl.aG;
+	var onUrlRequest = impl.aH;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		S: function(sendToApp)
+		T: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4014,9 +4014,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.aj === next.aj
-							&& curr.ab === next.ab
-							&& curr.ah.a === next.ah.a
+							&& curr.ak === next.ak
+							&& curr.ac === next.ac
+							&& curr.ai.a === next.ai.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4024,13 +4024,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		aD: function(flags)
+		aE: function(flags)
 		{
-			return A3(impl.aD, flags, _Browser_getUrl(), key);
+			return A3(impl.aE, flags, _Browser_getUrl(), key);
 		},
+		aN: impl.aN,
 		aM: impl.aM,
-		aL: impl.aL,
-		aJ: impl.aJ
+		aK: impl.aK
 	});
 }
 
@@ -4096,17 +4096,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { aB: 'hidden', ax: 'visibilitychange' }
+		? { aC: 'hidden', ay: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { aB: 'mozHidden', ax: 'mozvisibilitychange' }
+		? { aC: 'mozHidden', ay: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { aB: 'msHidden', ax: 'msvisibilitychange' }
+		? { aC: 'msHidden', ay: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { aB: 'webkitHidden', ax: 'webkitvisibilitychange' }
-		: { aB: 'hidden', ax: 'visibilitychange' };
+		? { aC: 'webkitHidden', ay: 'webkitvisibilitychange' }
+		: { aC: 'hidden', ay: 'visibilitychange' };
 }
 
 
@@ -4187,12 +4187,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		an: _Browser_getScene(),
-		aq: {
-			as: _Browser_window.pageXOffset,
-			at: _Browser_window.pageYOffset,
-			ar: _Browser_doc.documentElement.clientWidth,
-			aa: _Browser_doc.documentElement.clientHeight
+		ao: _Browser_getScene(),
+		ar: {
+			at: _Browser_window.pageXOffset,
+			au: _Browser_window.pageYOffset,
+			as: _Browser_doc.documentElement.clientWidth,
+			ab: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4202,8 +4202,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		ar: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		aa: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		as: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		ab: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4226,15 +4226,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			an: {
-				ar: node.scrollWidth,
-				aa: node.scrollHeight
+			ao: {
+				as: node.scrollWidth,
+				ab: node.scrollHeight
 			},
-			aq: {
-				as: node.scrollLeft,
-				at: node.scrollTop,
-				ar: node.clientWidth,
-				aa: node.clientHeight
+			ar: {
+				at: node.scrollLeft,
+				au: node.scrollTop,
+				as: node.clientWidth,
+				ab: node.clientHeight
 			}
 		};
 	});
@@ -4264,18 +4264,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			an: _Browser_getScene(),
-			aq: {
-				as: x,
-				at: y,
-				ar: _Browser_doc.documentElement.clientWidth,
-				aa: _Browser_doc.documentElement.clientHeight
+			ao: _Browser_getScene(),
+			ar: {
+				at: x,
+				au: y,
+				as: _Browser_doc.documentElement.clientWidth,
+				ab: _Browser_doc.documentElement.clientHeight
 			},
-			az: {
-				as: x + rect.left,
-				at: y + rect.top,
-				ar: rect.width,
-				aa: rect.height
+			aA: {
+				at: x + rect.left,
+				au: y + rect.top,
+				as: rect.width,
+				ab: rect.height
 			}
 		};
 	});
@@ -4814,7 +4814,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {_: fragment, ab: host, af: path, ah: port_, aj: protocol, ak: query};
+		return {aa: fragment, ac: host, ag: path, ai: port_, ak: protocol, al: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5093,8 +5093,114 @@ var $elm$core$Task$perform = F2(
 			A2($elm$core$Task$map, toMessage, task));
 	});
 var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$AssertOk = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var $author$project$Main$AssertionFailure = {$: 0};
+var $author$project$Nineagram$ContainsNonAlphaCharacters = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $author$project$Nineagram$LettersTooFew = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Nineagram$LettersTooMany = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$Nineagram$NineagramPuzzle = $elm$core$Basics$identity;
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (!_v0.$) {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$Char$toLower = _Char_toLower;
+var $author$project$Nineagram$fromCharList = function (letters) {
+	var checks = function () {
+		var length = $elm$core$List$length(letters);
+		return _List_fromArray(
+			[
+				function () {
+				var _v1 = A2(
+					$elm$core$List$filter,
+					A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$Char$isAlpha),
+					letters);
+				if (_v1.b) {
+					var x = _v1.a;
+					var xs = _v1.b;
+					return $elm$core$Maybe$Just(
+						A2($author$project$Nineagram$ContainsNonAlphaCharacters, x, xs));
+				} else {
+					return $elm$core$Maybe$Nothing;
+				}
+			}(),
+				(length < 9) ? $elm$core$Maybe$Just(
+				$author$project$Nineagram$LettersTooFew(length)) : ((length > 9) ? $elm$core$Maybe$Just(
+				$author$project$Nineagram$LettersTooMany(length)) : $elm$core$Maybe$Nothing)
+			]);
+	}();
+	var problems = A2($elm$core$List$filterMap, $elm$core$Basics$identity, checks);
+	if (!problems.b) {
+		return $elm$core$Result$Ok(
+			A2($elm$core$List$map, $elm$core$Char$toLower, letters));
+	} else {
+		return $elm$core$Result$Err(problems);
+	}
+};
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
+var $elm$core$String$trim = _String_trim;
+var $author$project$Nineagram$fromString = function (letters) {
+	return $author$project$Nineagram$fromCharList(
+		$elm$core$String$toList(
+			$elm$core$String$trim(letters)));
+};
 var $author$project$Main$NoGuesses = {$: 0};
-var $author$project$Main$init = {t: _List_Nil, L: false, M: $elm$core$Maybe$Nothing, j: $author$project$Main$NoGuesses, N: $author$project$Main$NoGuesses, z: _List_Nil, F: _List_Nil, A: '', O: _List_Nil, n: $elm$core$Maybe$Nothing, C: ''};
+var $author$project$Main$initState = {t: _List_Nil, L: false, M: $elm$core$Maybe$Nothing, j: $author$project$Main$NoGuesses, N: $author$project$Main$NoGuesses, z: _List_Nil, F: _List_Nil, A: '', O: _List_Nil, n: $elm$core$Maybe$Nothing, C: ''};
+var $author$project$Main$init = function () {
+	var _v0 = $author$project$Nineagram$fromString('GRNAMNIEA');
+	if (!_v0.$) {
+		var defaultPuzzle = _v0.a;
+		return A2(
+			$author$project$Main$AssertOk,
+			{P: defaultPuzzle},
+			$author$project$Main$initState);
+	} else {
+		return $author$project$Main$AssertionFailure;
+	}
+}();
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5253,10 +5359,6 @@ var $elm$core$List$take = F2(
 	function (n, list) {
 		return A3($elm$core$List$takeFast, 0, n, list);
 	});
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
 var $author$project$Nineagram$Guess$toString = function (_v0) {
 	var s = _v0;
 	return s;
@@ -5350,7 +5452,6 @@ var $author$project$Nineagram$isSolution = F3(
 						$elm$core$String$toList(
 							$author$project$Nineagram$Guess$toString(otherGuess))));
 				if (_v2.$ === 1) {
-					var err = _v2.a;
 					return false;
 				} else {
 					if (!_v2.a.b) {
@@ -5409,91 +5510,6 @@ var $author$project$Main$addGuess = F3(
 				});
 		}
 	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $author$project$Nineagram$ContainsNonAlphaCharacters = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $author$project$Nineagram$LettersTooFew = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$Nineagram$LettersTooMany = function (a) {
-	return {$: 2, a: a};
-};
-var $author$project$Nineagram$NineagramPuzzle = $elm$core$Basics$identity;
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (!_v0.$) {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
-var $elm$core$Basics$not = _Basics_not;
-var $elm$core$Char$toLower = _Char_toLower;
-var $author$project$Nineagram$fromCharList = function (letters) {
-	var checks = function () {
-		var length = $elm$core$List$length(letters);
-		return _List_fromArray(
-			[
-				function () {
-				var _v1 = A2(
-					$elm$core$List$filter,
-					A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$Char$isAlpha),
-					letters);
-				if (_v1.b) {
-					var x = _v1.a;
-					var xs = _v1.b;
-					return $elm$core$Maybe$Just(
-						A2($author$project$Nineagram$ContainsNonAlphaCharacters, x, xs));
-				} else {
-					return $elm$core$Maybe$Nothing;
-				}
-			}(),
-				(length < 9) ? $elm$core$Maybe$Just(
-				$author$project$Nineagram$LettersTooFew(length)) : ((length > 9) ? $elm$core$Maybe$Just(
-				$author$project$Nineagram$LettersTooMany(length)) : $elm$core$Maybe$Nothing)
-			]);
-	}();
-	var problems = A2($elm$core$List$filterMap, $elm$core$Basics$identity, checks);
-	if (!problems.b) {
-		return $elm$core$Result$Ok(
-			A2($elm$core$List$map, $elm$core$Char$toLower, letters));
-	} else {
-		return $elm$core$Result$Err(problems);
-	}
-};
-var $elm$core$String$trim = _String_trim;
-var $author$project$Nineagram$fromString = function (letters) {
-	return $author$project$Nineagram$fromCharList(
-		$elm$core$String$toList(
-			$elm$core$String$trim(letters)));
-};
 var $author$project$Nineagram$Guess$Guess = $elm$core$Basics$identity;
 var $author$project$Nineagram$Guess$GuessTooLong = function (a) {
 	return {$: 1, a: a};
@@ -5666,7 +5682,7 @@ var $author$project$Main$startSolving = function (puzzle) {
 			$author$project$Nineagram$getLetters(puzzle)));
 	return _Utils_Tuple2(
 		_Utils_update(
-			$author$project$Main$init,
+			$author$project$Main$initState,
 			{
 				A: letters,
 				n: $elm$core$Maybe$Just(puzzle)
@@ -5678,8 +5694,8 @@ var $author$project$Main$startSolving = function (puzzle) {
 					A2($author$project$Main$solve, $author$project$Main$ComputerSolved, puzzle)
 				])));
 };
-var $author$project$Main$update = F2(
-	function (msg, model) {
+var $author$project$Main$updateState = F3(
+	function (_v0, msg, model) {
 		switch (msg.$) {
 			case 0:
 				var what = msg.a;
@@ -5696,12 +5712,12 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 2:
 				var letters = msg.a;
-				var _v1 = $author$project$Nineagram$fromString(letters);
-				if (!_v1.$) {
-					var puzzle = _v1.a;
+				var _v2 = $author$project$Nineagram$fromString(letters);
+				if (!_v2.$) {
+					var puzzle = _v2.a;
 					return $author$project$Main$startSolving(puzzle);
 				} else {
-					var problems = _v1.a;
+					var problems = _v2.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -5720,17 +5736,17 @@ var $author$project$Main$update = F2(
 			case 5:
 				var puzzle = msg.a;
 				var typed = msg.b;
-				var _v2 = $author$project$Nineagram$Guess$fromString(
+				var _v3 = $author$project$Nineagram$Guess$fromString(
 					$elm$core$String$trim(typed));
-				if (_v2.$ === 1) {
-					var guessProblems = _v2.a;
+				if (_v3.$ === 1) {
+					var guessProblems = _v3.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{z: _List_Nil, F: guessProblems}),
 						$elm$core$Platform$Cmd$none);
 				} else {
-					var newGuess = _v2.a;
+					var newGuess = _v3.a;
 					return _Utils_Tuple2(
 						A3(
 							$author$project$Main$addGuess,
@@ -5775,7 +5791,7 @@ var $author$project$Main$update = F2(
 						{j: model.N}),
 					$elm$core$Platform$Cmd$none);
 			case 3:
-				return _Utils_Tuple2($author$project$Main$init, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2($author$project$Main$initState, $elm$core$Platform$Cmd$none);
 			default:
 				var solutions = msg.a;
 				return _Utils_Tuple2(
@@ -5787,6 +5803,23 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Main$update = F2(
+	function (msg, model) {
+		if (!model.$) {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		} else {
+			var constants = model.a;
+			var state = model.b;
+			var _v1 = A3($author$project$Main$updateState, constants, msg, state);
+			var newState = _v1.a;
+			var commands = _v1.b;
+			return _Utils_Tuple2(
+				A2($author$project$Main$AssertOk, constants, newState),
+				commands);
+		}
+	});
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5796,7 +5829,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $author$project$Nineagram$defaultPuzzle = $elm$core$String$toList('GRNAMNIEA');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $author$project$Main$SelectDefaultAttempt = {$: 7};
@@ -5819,7 +5851,6 @@ var $elm$html$Html$Events$on = F2(
 var $author$project$Main$keyHandlers = function (model) {
 	var _v0 = model.n;
 	if (!_v0.$) {
-		var puzzle = _v0.a;
 		return _List_fromArray(
 			[
 				A2(
@@ -5836,8 +5867,6 @@ var $author$project$Main$keyHandlers = function (model) {
 		return _List_Nil;
 	}
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$EnableCheat = {$: 9};
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
@@ -7237,42 +7266,53 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Main$view = function (model) {
-	var puzzle = A2($elm$core$Maybe$withDefault, $author$project$Nineagram$defaultPuzzle, model.n);
-	return A2(
-		$elm$html$Html$div,
-		_Utils_ap(
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('nineagramSolver')
-				]),
-			$author$project$Main$keyHandlers(model)),
-		_List_fromArray(
-			[
-				$author$project$Main$viewPuzzleCreation(model),
-				A2($author$project$Main$viewNineagram, puzzle, model.j),
-				A2($author$project$Main$viewGuessing, model, puzzle),
-				A2($author$project$Main$viewAttempts, model, puzzle),
-				$author$project$Main$viewAllSolutions(model),
-				A2(
-				$elm$html$Html$h1,
-				_List_Nil,
+var $author$project$Main$viewState = F2(
+	function (_v0, model) {
+		var defaultPuzzle = _v0.P;
+		var puzzle = A2($elm$core$Maybe$withDefault, defaultPuzzle, model.n);
+		return A2(
+			$elm$html$Html$div,
+			_Utils_ap(
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Nineagram Solver')
-					]))
-			]));
+						$elm$html$Html$Attributes$class('nineagramSolver')
+					]),
+				$author$project$Main$keyHandlers(model)),
+			_List_fromArray(
+				[
+					$author$project$Main$viewPuzzleCreation(model),
+					A2($author$project$Main$viewNineagram, puzzle, model.j),
+					A2($author$project$Main$viewGuessing, model, puzzle),
+					A2($author$project$Main$viewAttempts, model, puzzle),
+					$author$project$Main$viewAllSolutions(model),
+					A2(
+					$elm$html$Html$h1,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Nineagram Solver')
+						]))
+				]));
+	});
+var $author$project$Main$view = function (model) {
+	if (!model.$) {
+		return $elm$html$Html$text('Sorry, something went wrong.');
+	} else {
+		var constants = model.a;
+		var state = model.b;
+		return A2($author$project$Main$viewState, constants, state);
+	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{
-		aD: function (flags) {
+		aE: function (_v0) {
 			return _Utils_Tuple2($author$project$Main$init, $elm$core$Platform$Cmd$none);
 		},
-		aJ: function (model) {
+		aK: function (_v1) {
 			return $elm$core$Platform$Sub$none;
 		},
-		aL: $author$project$Main$update,
-		aM: $author$project$Main$view
+		aM: $author$project$Main$update,
+		aN: $author$project$Main$view
 	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));

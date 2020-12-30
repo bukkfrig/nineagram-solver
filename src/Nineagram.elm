@@ -2,7 +2,6 @@ module Nineagram exposing
     ( CreationProblem(..)
     , GuessProblem(..)
     , NineagramPuzzle
-    , defaultPuzzle
     , fromCharList
     , fromString
     , getLetters
@@ -18,11 +17,6 @@ import Nineagram.Guess exposing (Guess)
 
 type NineagramPuzzle
     = NineagramPuzzle (List Char)
-
-
-defaultPuzzle : NineagramPuzzle
-defaultPuzzle =
-    NineagramPuzzle <| String.toList "GRNAMNIEA"
 
 
 fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
@@ -103,7 +97,7 @@ isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
 
             Ok letters ->
                 case removeLetters letters (otherGuess |> Nineagram.Guess.toString |> String.toList |> removeMiddleLetter) of
-                    Err err ->
+                    Err _ ->
                         False
 
                     Ok [] ->
