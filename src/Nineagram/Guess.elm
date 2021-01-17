@@ -15,8 +15,8 @@ type Guess
 
 
 type Problem
-    = GuessTooShort Int
-    | GuessTooLong Int
+    = TooShort Int
+    | TooLong Int
 
 
 fromString : String -> Result (List Problem) Guess
@@ -25,10 +25,10 @@ fromString guess =
         length = String.length guess
     in
     if length < 5 then
-        Err [ GuessTooShort length ]
+        Err [ TooShort length ]
 
     else if length > 5 then
-        Err [ GuessTooLong length ]
+        Err [ TooLong length ]
 
     else
         Ok <| Guess <| String.toLower guess

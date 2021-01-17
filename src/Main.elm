@@ -3,20 +3,23 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Cheat
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Attribute, Html, b, br, button, div, h1, i, input, label, li, text, ul)
+import Html.Attributes as Attributes
+import Html.Events as Events
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
-import Nineagram.Guess exposing (Guess)
+import Nineagram.Guess as Guess exposing (Guess)
 import Process
 import Task exposing (Task)
+import Url
+import Url.Parser exposing ((<?>))
+import Url.Parser.Query
 
 
 {-| The goal in solving a Nineagram puzzle is to find two five-letter words
 from the nine letters provided that share the same middle letter.
 
-For example, given AAEEHPPSS, one solution is PEARS and SHAPE:
+For example, given AEEHPPRSS, one solution is PEARS and SHAPE:
 
         P
         E
@@ -33,11 +36,13 @@ its own word list.
 -}
 main : Program () Model Msg
 main =
-    Browser.element
-        { init = \() -> ( init, Cmd.none )
-        , subscriptions = \_ -> Sub.none
+    Browser.application
+        { init = \() url _ -> init url
         , update = update
         , view = view
+        , subscriptions = \_ -> Sub.none
+        , onUrlRequest = \_ -> NoOp
+        , onUrlChange = \_ -> NoOp
         }
 
 
@@ -57,64 +62,76 @@ type ComputerSolution
 
 type alias State =
     { letters : String
-    , problems : List Nineagram.CreationProblem
+    , puzzleCreationProblems : List Nineagram.CreationProblem
     , puzzle : Maybe NineagramPuzzle
-    , guessProblems : List Nineagram.Guess.Problem
+    , guessProblems : List Guess.Problem
     , guessForPuzzleProblems : List Nineagram.GuessProblem
     , attempts : List Attempt
     , currentAttempt : Attempt
     , defaultAttempt : Attempt
-    , typingGuess : String
+    , guessInput : String
     , cheat : Bool
     , computerSolutions : Maybe (List ComputerSolution)
     }
 
 
 type Model
-    = AssertionFailure
-    | AssertOk Constants State
-
-
-type alias Constants =
-    { defaultPuzzle : NineagramPuzzle }
+    = DefaultPuzzleProblem
+    | DefaultPuzzleLoaded NineagramPuzzle State
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case model of
-        AssertionFailure ->
+        DefaultPuzzleProblem ->
             ( model, Cmd.none )
 
-        AssertOk constants state ->
-            case updateState constants msg state of
+        DefaultPuzzleLoaded defaultPuzzle state ->
+            case updateState defaultPuzzle msg state of
                 ( newState, commands ) ->
-                    ( AssertOk constants newState, commands )
+                    ( DefaultPuzzleLoaded defaultPuzzle newState, commands )
 
 
-init : Model
-init =
+init : Url.Url -> ( Model, Cmd Msg )
+init url =
     case Nineagram.fromString "GRNAMNIEA" of
         Ok defaultPuzzle ->
-            AssertOk { defaultPuzzle = defaultPuzzle }
-                initState
+            ( DefaultPuzzleLoaded defaultPuzzle initState
+            , Cmd.batch
+                [ focus "puzzleLetters"
+                , case parseQueryParameter "letters" url of
+                    Just letters ->
+                        Task.perform SubmitPuzzleLetters (Task.succeed letters)
+
+                    Nothing ->
+                        Cmd.none
+                ]
+            )
 
         Err _ ->
-            AssertionFailure
+            ( DefaultPuzzleProblem, Cmd.none )
 
+{- ignore the path and just get the query parameter -}
+parseQueryParameter : String -> Url.Url -> Maybe String
+parseQueryParameter target url =
+    Url.Parser.parse
+        (Url.Parser.query (Url.Parser.Query.string target))
+        { url | path = "" }
+        |> Maybe.withDefault Nothing
 
 initState : State
 initState =
     { letters = ""
-    , problems = []
     , puzzle = Nothing
+    , puzzleCreationProblems = []
+    , computerSolutions = Nothing
     , guessProblems = []
     , guessForPuzzleProblems = []
-    , attempts = []
     , currentAttempt = NoGuesses
     , defaultAttempt = NoGuesses
-    , typingGuess = ""
+    , attempts = []
+    , guessInput = ""
     , cheat = False
-    , computerSolutions = Nothing
     }
 
 
@@ -134,13 +151,13 @@ type Msg
     | DeleteAttempt Attempt
     | EnableCheat
     | ComputerSolved (List ComputerSolution)
+    | NoOp
 
 
-updateState : Constants -> Msg -> State -> ( State, Cmd Msg )
+updateState : NineagramPuzzle -> Msg -> State -> ( State, Cmd Msg )
 updateState _ msg model =
     case msg of
-        Focussed what result ->
-            -- NoOp, but the debugger will show what was focussed and whether it worked
+        Focussed _ _ ->
             ( model, Cmd.none )
 
         TypedPuzzleLetters letters ->
@@ -151,36 +168,25 @@ updateState _ msg model =
                 Ok puzzle ->
                     startSolving puzzle
 
-                Err problems ->
-                    ( { model | problems = problems }, Cmd.none )
+                Err puzzleCreationProblems ->
+                    ( { model | puzzleCreationProblems = puzzleCreationProblems }, Cmd.none )
 
         TypingGuess typing ->
-            ( { model | typingGuess = String.toUpper typing }, Cmd.none )
+            ( { model | guessInput = String.toUpper typing }, Cmd.none )
 
         SubmitAttempt puzzle typed ->
-            case Nineagram.Guess.fromString (String.trim typed) of
+            case Guess.fromString (String.trim typed) of
+                Ok newGuess ->
+                    ( addAttempt { model | guessProblems = [] } puzzle newGuess, Cmd.none )
+
                 Err guessProblems ->
                     ( { model | guessProblems = guessProblems, guessForPuzzleProblems = [] }, Cmd.none )
-
-                Ok newGuess ->
-                    ( addGuess { model | guessProblems = [] } puzzle newGuess, Cmd.none )
 
         SelectAttempt attempt ->
             ( { model | currentAttempt = attempt }, Cmd.none )
 
         DeleteAttempt attempt ->
-            let
-                attempts =
-                    model.attempts |> List.filter (\a -> a /= attempt)
-
-                currentAttempt =
-                    if model.currentAttempt == attempt then
-                        model.defaultAttempt
-
-                    else
-                        model.currentAttempt
-            in
-            ( { model | attempts = attempts, currentAttempt = currentAttempt }, Cmd.none )
+            ( deleteAttempt attempt model, Cmd.none )
 
         EnableCheat ->
             ( { model | cheat = True }, Cmd.none )
@@ -189,23 +195,28 @@ updateState _ msg model =
             ( { model | currentAttempt = model.defaultAttempt }, Cmd.none )
 
         Reset ->
-            ( initState, Cmd.none )
+            ( initState, focus "puzzleLetters" )
 
         ComputerSolved solutions ->
             ( { model | computerSolutions = Just solutions }, Cmd.none )
 
+        NoOp ->
+            ( model, Cmd.none )
+
 
 startSolving : NineagramPuzzle -> ( State, Cmd Msg )
 startSolving puzzle =
-    let
-        letters =
-            puzzle
-                |> Nineagram.getLetters
+    ( { initState
+        | puzzle = Just puzzle
+        , letters =
+            Nineagram.getLetters puzzle
                 |> String.fromList
                 |> String.toUpper
-    in
-    ( { initState | puzzle = Just puzzle, letters = letters }
-    , Cmd.batch [ focus "guess", solve ComputerSolved puzzle ]
+      }
+    , Cmd.batch
+        [ focus "guess"
+        , solve ComputerSolved puzzle
+        ]
     )
 
 
@@ -217,7 +228,7 @@ focus id =
 solve : (List ComputerSolution -> msg) -> NineagramPuzzle -> Cmd msg
 solve tagger puzzle =
     Cheat.cheatWords
-        |> batchedFilterMap 200 (Result.toMaybe << Nineagram.Guess.fromString)
+        |> batchedFilterMap 200 (Result.toMaybe << Guess.fromString)
         |> Task.andThen (batchedFilter 200 (\guess -> Nineagram.validateGuess puzzle guess == Ok ()))
         |> Task.andThen
             (\validGuesses ->
@@ -235,8 +246,8 @@ solve tagger puzzle =
         |> Task.perform tagger
 
 
-addGuess : State -> NineagramPuzzle -> Guess -> State
-addGuess model puzzle guess =
+addAttempt : State -> NineagramPuzzle -> Guess -> State
+addAttempt model puzzle guess =
     case Nineagram.validateGuess puzzle guess of
         Err problems ->
             { model | guessForPuzzleProblems = problems }
@@ -245,6 +256,9 @@ addGuess model puzzle guess =
             let
                 newAttempt =
                     case model.currentAttempt of
+                        NoGuesses ->
+                            OneGuess guess
+
                         OneGuess firstGuess ->
                             if Nineagram.isSolution puzzle firstGuess guess then
                                 TwoGuesses firstGuess guess
@@ -252,15 +266,30 @@ addGuess model puzzle guess =
                             else
                                 OneGuess guess
 
-                        _ ->
+                        TwoGuesses _ _ ->
                             OneGuess guess
             in
             { model
                 | guessForPuzzleProblems = []
                 , attempts = newAttempt :: model.attempts
                 , currentAttempt = newAttempt
-                , typingGuess = ""
+                , guessInput = ""
             }
+
+
+deleteAttempt : Attempt -> State -> State
+deleteAttempt attempt state =
+    { state
+        | attempts =
+            List.filter (\a -> a /= attempt)
+                state.attempts
+        , currentAttempt =
+            if state.currentAttempt == attempt then
+                state.defaultAttempt
+
+            else
+                state.currentAttempt
+    }
 
 
 
@@ -323,23 +352,27 @@ batchedFilterMap batchSize fn list =
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
-    case model of
-        AssertionFailure ->
-            text "Sorry, something went wrong."
+    { title = "Nineagram Solver"
+    , body =
+        [ case model of
+            DefaultPuzzleProblem ->
+                text "Sorry, something went wrong."
 
-        AssertOk constants state ->
-            viewState constants state
+            DefaultPuzzleLoaded defaultPuzzle state ->
+                viewState defaultPuzzle state
+        ]
+    }
 
 
-viewState : Constants -> State -> Html Msg
-viewState { defaultPuzzle } model =
+viewState : NineagramPuzzle -> State -> Html Msg
+viewState defaultPuzzle model =
     let
         puzzle =
             Maybe.withDefault defaultPuzzle model.puzzle
     in
-    div ([ class "nineagramSolver" ] ++ keyHandlers model)
+    div (Attributes.class "nineagramSolver" :: keyHandlers model)
         [ viewPuzzleCreation model
         , viewNineagram puzzle model.currentAttempt
         , viewGuessing model puzzle
@@ -353,8 +386,8 @@ keyHandlers : State -> List (Attribute Msg)
 keyHandlers model =
     case model.puzzle of
         Just _ ->
-            [ on "keydown"
-                (Html.Events.keyCode
+            [ Events.on "keydown"
+                (Events.keyCode
                     |> Json.Decode.andThen
                         (\keyCode ->
                             {- esc -}
@@ -377,26 +410,42 @@ keyHandlers model =
 
 viewPuzzleCreation : State -> Html Msg
 viewPuzzleCreation model =
-    Html.form [ class "puzzleform", onSubmit (SubmitPuzzleLetters model.letters) ]
-        [ div [ class "lettersInput" ]
-            [ label [ for "puzzleLetters" ] [ b [] [ text "Nineagram Letters" ] ]
+    Html.form
+        [ Attributes.class "puzzleform"
+        , Events.onSubmit (SubmitPuzzleLetters model.letters)
+        ]
+        [ div [ Attributes.class "lettersInput" ]
+            [ label [ Attributes.for "puzzleLetters" ]
+                [ b []
+                    [ text "Nineagram Letters"
+                    ]
+                ]
             , br [] []
             , input
-                [ type_ "text"
-                , id "puzzleLetters"
-                , class "lettersInput"
-                , onInput TypedPuzzleLetters
-                , spellcheck False
-                , autocomplete False
-                , value model.letters
-                , disabled (model.puzzle /= Nothing)
+                [ Attributes.type_ "text"
+                , Attributes.id "puzzleLetters"
+                , Attributes.class "lettersInput"
+                , Attributes.spellcheck False
+                , Attributes.autocomplete False
+                , Attributes.value model.letters
+                , Attributes.disabled (model.puzzle /= Nothing)
+                , Events.onInput TypedPuzzleLetters
                 ]
                 []
-            , div [ class "creationProblems" ] [ viewCreationProblems model.problems ]
+            , div [ Attributes.class "creationProblems" ]
+                [ viewCreationProblems model.puzzleCreationProblems
+                ]
             ]
         , div []
-            [ button [ disabled (model.puzzle /= Nothing) ] [ text "Submit" ]
-            , button [ onClick Reset, type_ "button" ] [ text "Clear" ]
+            [ button [ Attributes.disabled (model.puzzle /= Nothing) ]
+                [ text "Submit"
+                ]
+            , button
+                [ Attributes.type_ "button"
+                , Events.onClick Reset
+                ]
+                [ text "Clear"
+                ]
             ]
         ]
 
@@ -421,7 +470,7 @@ viewCreationProblems problems =
     in
     List.filterMap displayProblem problems
         |> List.map (\message -> div [] [ text message ])
-        |> div [ class "creationProblem" ]
+        |> div [ Attributes.class "creationProblem" ]
 
 
 
@@ -451,23 +500,23 @@ viewNineagramNoGuesses puzzle =
                 |> String.fromList
                 |> String.toUpper
 
-        guess n =
+        guess _ =
             ""
     in
-    div [ class "nineagram" ]
-        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (guess 1) ] [] ]
+    div [ Attributes.class "nineagram" ]
+        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (guess 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (guess 2) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (guess 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (guess 6) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (guess 7) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (guess 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (guess 8) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (guess 9) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (guess 6) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (guess 7) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (guess 3) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (guess 8) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (guess 9) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (guess 4) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (guess 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (guess 5) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (guess 5) ] [] ]
         ]
 
 
@@ -479,7 +528,7 @@ viewNineagramOneGuess puzzle guess =
                 |> Result.withDefault []
 
         letter n =
-            (List.repeat (String.length (Nineagram.Guess.toString guess)) ' ' ++ remain)
+            (List.repeat (String.length (Guess.toString guess)) ' ' ++ remain)
                 |> List.take n
                 |> List.drop (n - 1)
                 |> String.fromList
@@ -487,39 +536,39 @@ viewNineagramOneGuess puzzle guess =
 
         guessLetter n =
             guess
-                |> Nineagram.Guess.toString
+                |> Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
                 |> String.fromList
                 |> String.toUpper
     in
-    div [ class "nineagram" ]
-        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (guessLetter 1) ] [] ]
+    div [ Attributes.class "nineagram" ]
+        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (guessLetter 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (guessLetter 2) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (guessLetter 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (guessLetter 6) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (guessLetter 7) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (guessLetter 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (guessLetter 8) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (guessLetter 9) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (guessLetter 6) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (guessLetter 7) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (guessLetter 3) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (guessLetter 8) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (guessLetter 9) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (guessLetter 4) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (guessLetter 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (guessLetter 5) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (guessLetter 5) ] [] ]
         ]
 
 
 viewNineagramTwoGuesses : NineagramPuzzle -> Guess -> Guess -> Html Msg
-viewNineagramTwoGuesses puzzle firstGuess secondGuess =
+viewNineagramTwoGuesses _ firstGuess secondGuess =
     let
-        letter n =
+        letter _ =
             ""
 
         firstGuessLetter n =
             firstGuess
-                |> Nineagram.Guess.toString
+                |> Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
@@ -528,27 +577,27 @@ viewNineagramTwoGuesses puzzle firstGuess secondGuess =
 
         secondGuessLetter n =
             secondGuess
-                |> Nineagram.Guess.toString
+                |> Guess.toString
                 |> String.toList
                 |> List.take n
                 |> List.drop (n - 1)
                 |> String.fromList
                 |> String.toUpper
     in
-    div [ class "nineagram", class "solution" ]
-        [ div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 1), value (firstGuessLetter 1) ] [] ]
+    div [ Attributes.class "nineagram", Attributes.class "solution" ]
+        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (firstGuessLetter 1) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 2), value (firstGuessLetter 2) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (firstGuessLetter 2) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 6), value (secondGuessLetter 1) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 7), value (secondGuessLetter 2) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 3), value (secondGuessLetter 3) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 8), value (secondGuessLetter 4) ] [] ]
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 9), value (secondGuessLetter 5) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (secondGuessLetter 1) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (secondGuessLetter 2) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (secondGuessLetter 3) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (secondGuessLetter 4) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (secondGuessLetter 5) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 4), value (firstGuessLetter 4) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (firstGuessLetter 4) ] [] ]
         , br [] []
-        , div [ class "letterbox" ] [ input [ type_ "text", class "letter", placeholder (letter 5), value (firstGuessLetter 5) ] [] ]
+        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (firstGuessLetter 5) ] [] ]
         ]
 
 
@@ -557,61 +606,76 @@ viewNineagramTwoGuesses puzzle firstGuess secondGuess =
 
 
 viewGuessing : State -> NineagramPuzzle -> Html Msg
-viewGuessing model puzzle =
-    Html.form [ onSubmit <| SubmitAttempt puzzle model.typingGuess, class "guessForm" ]
-        [ label [ for "guess" ] [ b [] [ text "Next Guess" ] ]
+viewGuessing state puzzle =
+    Html.form
+        [ Attributes.class "guessForm"
+        , Events.onSubmit
+            (SubmitAttempt puzzle state.guessInput)
+        ]
+        [ label [ Attributes.for "guess" ]
+            [ b [] [ text "Next Guess" ] ]
         , br [] []
         , input
-            [ id "guess"
-            , name "guess"
-            , class "lettersInput"
-            , autocomplete False
-            , spellcheck False
-            , disabled (model.puzzle == Nothing)
-            , value model.typingGuess
-            , onInput TypingGuess
+            [ Attributes.id "guess"
+            , Attributes.name "guess"
+            , Attributes.class "lettersInput"
+            , Attributes.autocomplete False
+            , Attributes.spellcheck False
+            , Attributes.disabled (state.puzzle == Nothing)
+            , Attributes.value state.guessInput
+            , Events.onInput TypingGuess
             ]
             []
-        , div [ class "guessProblems" ]
-            [ viewGuessProblems model.guessProblems
-            , viewGuessForPuzzleProblems model.guessForPuzzleProblems
+        , div [ Attributes.class "guessProblems" ]
+            [ viewGuessProblems state.guessProblems
+            , viewGuessForPuzzleProblems state.guessForPuzzleProblems
             ]
         , button [] [ text "Guess" ]
         ]
 
 
-viewGuessProblems : List Nineagram.Guess.Problem -> Html Msg
+viewGuessProblems : List Guess.Problem -> Html Msg
 viewGuessProblems problems =
     let
-        displayProblem : Nineagram.Guess.Problem -> Maybe String
+        displayProblem : Guess.Problem -> Maybe String
         displayProblem problem =
             case problem of
-                Nineagram.Guess.GuessTooShort 0 ->
+                Guess.TooShort 0 ->
                     Nothing
 
-                Nineagram.Guess.GuessTooShort n ->
+                Guess.TooShort n ->
                     Just <| "That's only " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
 
-                Nineagram.Guess.GuessTooLong n ->
+                Guess.TooLong n ->
                     Just <| "That's " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
     in
     List.filterMap displayProblem problems
         |> List.map (\message -> div [] [ text message ])
-        |> div [ class "guessProblem" ]
+        |> div [ Attributes.class "guessProblem" ]
 
 
 viewGuessForPuzzleProblems : List Nineagram.GuessProblem -> Html Msg
 viewGuessForPuzzleProblems problems =
-    let
-        displayProblem : Nineagram.GuessProblem -> Maybe String
-        displayProblem problem =
-            case problem of
-                Nineagram.LetterNotFound letter ->
-                    Just <| "There aren't enough '" ++ (String.fromChar letter |> String.toUpper) ++ "' for that word."
-    in
-    List.filterMap displayProblem problems
-        |> List.map (\message -> div [] [ text message ])
-        |> div [ class "guessForPuzzleProblem" ]
+    div [ Attributes.class "guessForPuzzleProblem" ]
+        (List.filterMap
+            (viewGuessForPuzzleProblem
+                >> Maybe.andThen (Just << div [] << List.singleton)
+            )
+            problems
+        )
+
+
+viewGuessForPuzzleProblem : Nineagram.GuessProblem -> Maybe (Html msg)
+viewGuessForPuzzleProblem problem =
+    case problem of
+        Nineagram.LetterNotFound letter ->
+            (Just << text << String.concat)
+                [ "There aren't enough "
+                , "'"
+                , (String.toUpper << String.fromChar) letter
+                , "'"
+                , " for that word."
+                ]
 
 
 
@@ -620,38 +684,69 @@ viewGuessForPuzzleProblems problems =
 
 viewAttempts : State -> NineagramPuzzle -> Html Msg
 viewAttempts model puzzle =
-    div [ class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
+    div [ Attributes.class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
 
 
 viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
 viewAttempt puzzle attempt =
     case attempt of
         NoGuesses ->
-            div [ class "attempt", class "noguesses", onClick (SelectAttempt attempt) ] [ i [] [ text "New word" ] ]
+            div
+                [ Attributes.class "attempt"
+                , Attributes.class "noguesses"
+                , Events.onClick (SelectAttempt attempt)
+                ]
+                [ i []
+                    [ text "New word" ]
+                ]
 
         OneGuess guess ->
             let
                 remaining =
-                    Nineagram.remainingLetters puzzle guess
+                    guess
+                        |> Nineagram.remainingLetters puzzle
                         |> Result.map String.fromList
                         |> Result.withDefault ""
 
                 middleLetter =
-                    guess |> Nineagram.Guess.toString |> String.left 3 |> String.right 1
+                    (Guess.toString >> String.left 3 >> String.right 1)
+                        guess
             in
-            div [ class "attempt", class "oneguess", onClick (SelectAttempt attempt) ]
-                [ b [] [ text <| String.toUpper <| Nineagram.Guess.toString guess ++ " - " ]
-                , text <| String.toUpper <| String.left 2 remaining
-                , b [] [ text <| String.toUpper <| middleLetter ]
-                , text <| String.toUpper <| String.right 2 remaining
-                , button [ stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
+            div
+                [ Attributes.class "attempt"
+                , Attributes.class "oneguess"
+                , Events.onClick (SelectAttempt attempt)
+                ]
+                [ (b [] << List.singleton << text << String.toUpper)
+                    (Guess.toString guess)
+                , text
+                    " - "
+                , (text << String.toUpper)
+                    (String.left 2 remaining)
+                , (b [] << List.singleton << text << String.toUpper)
+                    middleLetter
+                , (text << String.toUpper)
+                    (String.right 2 remaining)
+                , button [ onClickStopPropagation (DeleteAttempt attempt) ]
+                    [ text "X" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
-            div [ class "attempt", class "twoguesses", onClick (SelectAttempt attempt) ]
-                [ b [] [ text <| String.toUpper <| Nineagram.Guess.toString firstGuess ++ " - " ++ Nineagram.Guess.toString secondGuess ]
-                , button [ stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
+            div [ Attributes.class "attempt", Attributes.class "twoguesses", Events.onClick (SelectAttempt attempt) ]
+                [ b [] [ text <| String.toUpper <| Guess.toString firstGuess ++ " - " ++ Guess.toString secondGuess ]
+                , button [ Events.stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
                 ]
+
+
+onClickStopPropagation : msg -> Attribute msg
+onClickStopPropagation =
+    alwaysStopPropagationOn "click"
+
+
+alwaysStopPropagationOn : String -> msg -> Attribute msg
+alwaysStopPropagationOn event msg =
+    Events.stopPropagationOn event
+        (Json.Decode.succeed ( msg, True ))
 
 
 
@@ -662,54 +757,60 @@ viewAllSolutions : State -> Html Msg
 viewAllSolutions model =
     let
         viewComputerSolved computerSolutions =
-            div [ class "cheat" ]
+            div [ Attributes.class "cheat" ]
                 [ text <| "The computer found " ++ (String.fromInt << List.length) computerSolutions ++ " solutions. "
                 , br [] []
                 , if not <| model.cheat then
-                    button [ type_ "button", onClick EnableCheat ] [ text "Show me!" ]
+                    button [ Attributes.type_ "button", Events.onClick EnableCheat ] [ text "Show me!" ]
 
                   else
                     viewSolutions computerSolutions
                 ]
 
         viewComputerStillSolving =
-            div [ class "cheat" ]
+            div [ Attributes.class "cheat" ]
                 [ text "The computer is solving... "
                 , br [] []
-                , button [ type_ "button", disabled True ] [ text "Show me!" ]
+                , button [ Attributes.type_ "button", Attributes.disabled True ] [ text "Show me!" ]
                 ]
 
         viewNoPuzzleYet =
-            div [ class "cheat" ]
+            div [ Attributes.class "cheat" ]
                 [ text "The computer will try to solve your puzzle. "
                 , br [] []
-                , button [ type_ "button", disabled True ] [ text "Show me!" ]
+                , button [ Attributes.type_ "button", Attributes.disabled True ] [ text "Show me!" ]
                 ]
     in
     case ( model.puzzle, model.computerSolutions ) of
         ( Nothing, _ ) ->
             viewNoPuzzleYet
 
-        ( Just puzzle, Nothing ) ->
+        ( Just _, Nothing ) ->
             viewComputerStillSolving
 
-        ( Just puzzle, Just computerSolutions ) ->
+        ( Just _, Just computerSolutions ) ->
             viewComputerSolved computerSolutions
 
 
 viewSolutions : List ComputerSolution -> Html msg
-viewSolutions computerSolutions =
-    let
-        displaySolution : ComputerSolution -> Html msg
-        displaySolution (ComputerSolution first matching) =
-            li []
-                [ (text << String.join "")
-                    [ Nineagram.Guess.toString first
-                    , " "
-                    , "("
-                    , String.join ", " (List.map Nineagram.Guess.toString matching)
-                    , ")"
-                    ]
-                ]
-    in
-    ul [] (List.map displaySolution computerSolutions)
+viewSolutions solutions =
+    ul []
+        (List.map (\solution -> li [] [ viewSolution solution ])
+            solutions
+        )
+
+
+viewSolution : ComputerSolution -> Html msg
+viewSolution (ComputerSolution first matches) =
+    text
+        (String.concat
+            [ Guess.toString first
+            , " "
+            , "("
+            , String.join ", "
+                (List.map Guess.toString
+                    matches
+                )
+            , ")"
+            ]
+        )

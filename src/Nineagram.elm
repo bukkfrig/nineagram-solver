@@ -22,36 +22,43 @@ type NineagramPuzzle
 fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
 fromCharList letters =
     let
+        length =
+            List.length letters
+
         checks =
-            let
-                length =
-                    List.length letters
-            in
             [ case List.filter (not << Char.isAlpha) letters of
                 x :: xs ->
-                    Just <| ContainsNonAlphaCharacters x xs
+                    Just
+                        (ContainsNonAlphaCharacters x xs)
 
                 [] ->
                     Nothing
             , if length < 9 then
-                Just <| LettersTooFew length
+                Just
+                    (LettersTooFew length)
 
               else if length > 9 then
-                Just <| LettersTooMany length
+                Just
+                    (LettersTooMany length)
 
               else
                 Nothing
             ]
 
         problems =
-            List.filterMap identity checks
+            checks
+                |> List.filterMap identity
+                
     in
-    case problems of
-        [] ->
-            Ok <| NineagramPuzzle (List.map Char.toLower letters)
+    if problems == [] then
+        Ok
+            (letters
+                |> List.map Char.toLower
+                |> NineagramPuzzle
+            )
 
-        _ ->
-            Err problems
+    else
+        Err problems
 
 
 fromString : String -> Result (List CreationProblem) NineagramPuzzle
