@@ -5111,9 +5111,9 @@ var $elm$core$Task$perform = F2(
 			A2($elm$core$Task$map, toMessage, task));
 	});
 var $elm$browser$Browser$application = _Browser_application;
-var $author$project$Main$DefaultPuzzleLoaded = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
+var $author$project$Main$DefaultPuzzleLoaded = F3(
+	function (a, b, c) {
+		return {$: 1, a: a, b: b, c: c};
 	});
 var $author$project$Main$DefaultPuzzleProblem = {$: 0};
 var $author$project$Main$SubmitPuzzleLetters = function (a) {
@@ -5233,11 +5233,11 @@ var $author$project$Nineagram$fromString = function (letters) {
 			$elm$core$String$trim(letters)));
 };
 var $author$project$Main$NoGuesses = {$: 0};
-var $author$project$Main$initState = {t: _List_Nil, L: false, M: $elm$core$Maybe$Nothing, j: $author$project$Main$NoGuesses, N: $author$project$Main$NoGuesses, z: _List_Nil, A: '', F: _List_Nil, B: '', n: $elm$core$Maybe$Nothing, O: _List_Nil};
+var $author$project$Main$initState = {t: _List_Nil, L: false, M: $elm$core$Maybe$Nothing, j: $author$project$Main$NoGuesses, N: $author$project$Main$NoGuesses, A: _List_Nil, B: '', F: _List_Nil, v: '', n: $elm$core$Maybe$Nothing, O: _List_Nil};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
-		return {u: frag, v: params, s: unvisited, o: value, x: visited};
+		return {u: frag, w: params, s: unvisited, o: value, y: visited};
 	});
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -5873,9 +5873,9 @@ var $elm$url$Url$Parser$Parser = $elm$core$Basics$identity;
 var $elm$url$Url$Parser$query = function (_v0) {
 	var queryParser = _v0;
 	return function (_v1) {
-		var visited = _v1.x;
+		var visited = _v1.y;
 		var unvisited = _v1.s;
-		var params = _v1.v;
+		var params = _v1.w;
 		var frag = _v1.u;
 		var value = _v1.o;
 		return _List_fromArray(
@@ -5937,33 +5937,34 @@ var $author$project$Main$parseQueryParameter = F2(
 					url,
 					{aI: ''})));
 	});
-var $author$project$Main$init = function (url) {
-	var _v0 = $author$project$Nineagram$fromString('GRNAMNIEA');
-	if (!_v0.$) {
-		var defaultPuzzle = _v0.a;
-		return _Utils_Tuple2(
-			A2($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, $author$project$Main$initState),
-			$elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						$author$project$Main$focus('puzzleLetters'),
-						function () {
-						var _v1 = A2($author$project$Main$parseQueryParameter, 'letters', url);
-						if (!_v1.$) {
-							var letters = _v1.a;
-							return A2(
-								$elm$core$Task$perform,
-								$author$project$Main$SubmitPuzzleLetters,
-								$elm$core$Task$succeed(letters));
-						} else {
-							return $elm$core$Platform$Cmd$none;
-						}
-					}()
-					])));
-	} else {
-		return _Utils_Tuple2($author$project$Main$DefaultPuzzleProblem, $elm$core$Platform$Cmd$none);
-	}
-};
+var $author$project$Main$init = F2(
+	function (url, key) {
+		var _v0 = $author$project$Nineagram$fromString('GRNAMNIEA');
+		if (!_v0.$) {
+			var defaultPuzzle = _v0.a;
+			return _Utils_Tuple2(
+				A3($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, key, $author$project$Main$initState),
+				$elm$core$Platform$Cmd$batch(
+					_List_fromArray(
+						[
+							$author$project$Main$focus('puzzleLetters'),
+							function () {
+							var _v1 = A2($author$project$Main$parseQueryParameter, 'letters', url);
+							if (!_v1.$) {
+								var letters = _v1.a;
+								return A2(
+									$elm$core$Task$perform,
+									$author$project$Main$SubmitPuzzleLetters,
+									$elm$core$Task$succeed(letters));
+							} else {
+								return $elm$core$Platform$Cmd$none;
+							}
+						}()
+						])));
+		} else {
+			return _Utils_Tuple2($author$project$Main$DefaultPuzzleProblem, $elm$core$Platform$Cmd$none);
+		}
+	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$OneGuess = function (a) {
@@ -6250,7 +6251,7 @@ var $author$project$Main$addAttempt = F3(
 			var problems = _v0.a;
 			return _Utils_update(
 				model,
-				{z: problems});
+				{A: problems});
 		} else {
 			var newAttempt = function () {
 				var _v1 = model.j;
@@ -6269,8 +6270,8 @@ var $author$project$Main$addAttempt = F3(
 				{
 					t: A2($elm$core$List$cons, newAttempt, model.t),
 					j: newAttempt,
-					z: _List_Nil,
-					A: ''
+					A: _List_Nil,
+					B: ''
 				});
 		}
 	});
@@ -6317,6 +6318,28 @@ var $author$project$Nineagram$getLetters = function (_v0) {
 	var letters = _v0;
 	return letters;
 };
+var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$relative = F2(
+	function (pathSegments, parameters) {
+		return _Utils_ap(
+			A2($elm$core$String$join, '/', pathSegments),
+			$elm$url$Url$Builder$toQuery(parameters));
+	});
 var $author$project$Main$ComputerSolution = F2(
 	function (a, b) {
 		return {$: 0, a: a, b: b};
@@ -6424,26 +6447,48 @@ var $author$project$Main$solve = F2(
 						A2($elm$core$Basics$composeL, $elm$core$Result$toMaybe, $author$project$Nineagram$Guess$fromString),
 						$author$project$Cheat$cheatWords))));
 	});
+var $elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$url$Url$percentEncode = _Url_percentEncode;
+var $elm$url$Url$Builder$string = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$url$Url$percentEncode(value));
+	});
 var $elm$core$String$toUpper = _String_toUpper;
-var $author$project$Main$startSolving = function (puzzle) {
-	return _Utils_Tuple2(
-		_Utils_update(
+var $author$project$Main$startSolving = F2(
+	function (key, puzzle) {
+		var newModel = _Utils_update(
 			$author$project$Main$initState,
 			{
-				B: $elm$core$String$toUpper(
+				v: $elm$core$String$toUpper(
 					$elm$core$String$fromList(
 						$author$project$Nineagram$getLetters(puzzle))),
 				n: $elm$core$Maybe$Just(puzzle)
-			}),
-		$elm$core$Platform$Cmd$batch(
-			_List_fromArray(
-				[
-					$author$project$Main$focus('guess'),
-					A2($author$project$Main$solve, $author$project$Main$ComputerSolved, puzzle)
-				])));
-};
-var $author$project$Main$updateState = F3(
-	function (_v0, msg, model) {
+			});
+		return _Utils_Tuple2(
+			newModel,
+			$elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						$author$project$Main$focus('guess'),
+						A2($author$project$Main$solve, $author$project$Main$ComputerSolved, puzzle),
+						A2(
+						$elm$core$Basics$composeL,
+						$elm$browser$Browser$Navigation$pushUrl(key),
+						$elm$url$Url$Builder$relative(_List_Nil))(
+						_List_fromArray(
+							[
+								A2($elm$url$Url$Builder$string, 'letters', newModel.v)
+							]))
+					])));
+	});
+var $author$project$Main$updateState = F4(
+	function (_v0, key, msg, model) {
 		switch (msg.$) {
 			case 0:
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -6453,7 +6498,7 @@ var $author$project$Main$updateState = F3(
 					_Utils_update(
 						model,
 						{
-							B: $elm$core$String$toUpper(letters)
+							v: $elm$core$String$toUpper(letters)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 2:
@@ -6461,7 +6506,7 @@ var $author$project$Main$updateState = F3(
 				var _v2 = $author$project$Nineagram$fromString(letters);
 				if (!_v2.$) {
 					var puzzle = _v2.a;
-					return $author$project$Main$startSolving(puzzle);
+					return A2($author$project$Main$startSolving, key, puzzle);
 				} else {
 					var puzzleCreationProblems = _v2.a;
 					return _Utils_Tuple2(
@@ -6476,7 +6521,7 @@ var $author$project$Main$updateState = F3(
 					_Utils_update(
 						model,
 						{
-							A: $elm$core$String$toUpper(typing)
+							B: $elm$core$String$toUpper(typing)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 5:
@@ -6500,7 +6545,7 @@ var $author$project$Main$updateState = F3(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{z: _List_Nil, F: guessProblems}),
+							{A: _List_Nil, F: guessProblems}),
 						$elm$core$Platform$Cmd$none);
 				}
 			case 6:
@@ -6550,12 +6595,13 @@ var $author$project$Main$update = F2(
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		} else {
 			var defaultPuzzle = model.a;
-			var state = model.b;
-			var _v1 = A3($author$project$Main$updateState, defaultPuzzle, msg, state);
+			var key = model.b;
+			var state = model.c;
+			var _v1 = A4($author$project$Main$updateState, defaultPuzzle, key, msg, state);
 			var newState = _v1.a;
 			var commands = _v1.b;
 			return _Utils_Tuple2(
-				A2($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, newState),
+				A3($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, key, newState),
 				commands);
 		}
 	});
@@ -6628,6 +6674,10 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $elm$core$String$concat = function (strings) {
 	return A2($elm$core$String$join, '', strings);
@@ -6635,37 +6685,30 @@ var $elm$core$String$concat = function (strings) {
 var $author$project$Main$viewSolution = function (_v0) {
 	var first = _v0.a;
 	var matches = _v0.b;
-	return $elm$html$Html$text(
-		$elm$core$String$concat(
-			_List_fromArray(
-				[
-					$author$project$Nineagram$Guess$toString(first),
-					' ',
-					'(',
-					A2(
-					$elm$core$String$join,
-					', ',
-					A2($elm$core$List$map, $author$project$Nineagram$Guess$toString, matches)),
-					')'
-				])));
+	return A2($elm$core$Basics$composeL, $elm$html$Html$text, $elm$core$String$concat)(
+		_List_fromArray(
+			[
+				$author$project$Nineagram$Guess$toString(first),
+				' ',
+				'(',
+				A2(
+				$elm$core$String$join,
+				', ',
+				A2($elm$core$List$map, $author$project$Nineagram$Guess$toString, matches)),
+				')'
+			]));
 };
-var $author$project$Main$viewSolutions = function (solutions) {
-	return A2(
-		$elm$html$Html$ul,
-		_List_Nil,
+var $author$project$Main$viewSolutions = A2(
+	$elm$core$Basics$composeL,
+	$elm$html$Html$ul(_List_Nil),
+	$elm$core$List$map(
 		A2(
-			$elm$core$List$map,
-			function (solution) {
-				return A2(
-					$elm$html$Html$li,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$author$project$Main$viewSolution(solution)
-						]));
-			},
-			solutions));
-};
+			$elm$core$Basics$composeL,
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$html$Html$li(_List_Nil),
+				$elm$core$List$singleton),
+			$author$project$Main$viewSolution)));
 var $author$project$Main$viewAllSolutions = function (model) {
 	var viewNoPuzzleYet = A2(
 		$elm$html$Html$div,
@@ -6804,10 +6847,6 @@ var $elm$core$String$right = F2(
 			$elm$core$String$length(string),
 			string);
 	});
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
 var $elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (!result.$) {
@@ -6845,10 +6884,11 @@ var $author$project$Main$viewAttempt = F2(
 				var remaining = A2(
 					$elm$core$Result$withDefault,
 					'',
-					A2(
-						$elm$core$Result$map,
-						$elm$core$String$fromList,
-						A2($author$project$Nineagram$remainingLetters, puzzle, guess)));
+					A3(
+						$elm$core$Basics$composeR,
+						$author$project$Nineagram$remainingLetters(puzzle),
+						$elm$core$Result$map($elm$core$String$fromList),
+						guess));
 				var middleLetter = A2(
 					$elm$core$Basics$composeR,
 					$author$project$Nineagram$Guess$toString,
@@ -6902,7 +6942,7 @@ var $author$project$Main$viewAttempt = F2(
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('X')
+									$elm$html$Html$text('x')
 								]))
 						]));
 			default:
@@ -6920,29 +6960,38 @@ var $author$project$Main$viewAttempt = F2(
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$b,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$elm$core$String$toUpper(
-										$author$project$Nineagram$Guess$toString(firstGuess) + (' - ' + $author$project$Nineagram$Guess$toString(secondGuess))))
-								])),
+							$elm$core$Basics$composeL,
+							A2(
+								$elm$core$Basics$composeL,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$html$Html$b(_List_Nil),
+									$elm$core$List$singleton),
+								$elm$html$Html$text),
+							$elm$core$String$toUpper)(
+							$author$project$Nineagram$Guess$toString(firstGuess)),
+							$elm$html$Html$text(' - '),
+							A2(
+							$elm$core$Basics$composeL,
+							A2(
+								$elm$core$Basics$composeL,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$html$Html$b(_List_Nil),
+									$elm$core$List$singleton),
+								$elm$html$Html$text),
+							$elm$core$String$toUpper)(
+							$author$project$Nineagram$Guess$toString(secondGuess)),
 							A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									A2(
-									$elm$html$Html$Events$stopPropagationOn,
-									'click',
-									$elm$json$Json$Decode$succeed(
-										_Utils_Tuple2(
-											$author$project$Main$DeleteAttempt(attempt),
-											true)))
+									$author$project$Main$onClickStopPropagation(
+									$author$project$Main$DeleteAttempt(attempt))
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('X')
+									$elm$html$Html$text('x')
 								]))
 						]));
 		}
@@ -7118,7 +7167,7 @@ var $author$project$Main$viewGuessing = F2(
 				[
 					$elm$html$Html$Attributes$class('guessForm'),
 					$elm$html$Html$Events$onSubmit(
-					A2($author$project$Main$SubmitAttempt, puzzle, state.A))
+					A2($author$project$Main$SubmitAttempt, puzzle, state.B))
 				]),
 			_List_fromArray(
 				[
@@ -7150,7 +7199,7 @@ var $author$project$Main$viewGuessing = F2(
 							$elm$html$Html$Attributes$spellcheck(false),
 							$elm$html$Html$Attributes$disabled(
 							_Utils_eq(state.n, $elm$core$Maybe$Nothing)),
-							$elm$html$Html$Attributes$value(state.A),
+							$elm$html$Html$Attributes$value(state.B),
 							$elm$html$Html$Events$onInput($author$project$Main$TypingGuess)
 						]),
 					_List_Nil),
@@ -7163,7 +7212,7 @@ var $author$project$Main$viewGuessing = F2(
 					_List_fromArray(
 						[
 							$author$project$Main$viewGuessProblems(state.F),
-							$author$project$Main$viewGuessForPuzzleProblems(state.z)
+							$author$project$Main$viewGuessForPuzzleProblems(state.A)
 						])),
 					A2(
 					$elm$html$Html$button,
@@ -7950,7 +7999,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 			[
 				$elm$html$Html$Attributes$class('puzzleform'),
 				$elm$html$Html$Events$onSubmit(
-				$author$project$Main$SubmitPuzzleLetters(model.B))
+				$author$project$Main$SubmitPuzzleLetters(model.v))
 			]),
 		_List_fromArray(
 			[
@@ -7988,7 +8037,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 								$elm$html$Html$Attributes$class('lettersInput'),
 								$elm$html$Html$Attributes$spellcheck(false),
 								$elm$html$Html$Attributes$autocomplete(false),
-								$elm$html$Html$Attributes$value(model.B),
+								$elm$html$Html$Attributes$value(model.v),
 								$elm$html$Html$Attributes$disabled(
 								!_Utils_eq(model.n, $elm$core$Maybe$Nothing)),
 								$elm$html$Html$Events$onInput($author$project$Main$TypedPuzzleLetters)
@@ -8069,7 +8118,7 @@ var $author$project$Main$view = function (model) {
 					return $elm$html$Html$text('Sorry, something went wrong.');
 				} else {
 					var defaultPuzzle = model.a;
-					var state = model.b;
+					var state = model.c;
 					return A2($author$project$Main$viewState, defaultPuzzle, state);
 				}
 			}()
@@ -8080,16 +8129,16 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$application(
 	{
 		aD: F3(
-			function (_v0, url, _v1) {
-				return $author$project$Main$init(url);
+			function (_v0, url, key) {
+				return A2($author$project$Main$init, url, key);
 			}),
-		aF: function (_v2) {
+		aF: function (_v1) {
 			return $author$project$Main$NoOp;
 		},
-		aG: function (_v3) {
+		aG: function (_v2) {
 			return $author$project$Main$NoOp;
 		},
-		aK: function (_v4) {
+		aK: function (_v3) {
 			return $elm$core$Platform$Sub$none;
 		},
 		aM: $author$project$Main$update,

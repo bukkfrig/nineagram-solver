@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Dom
+import Browser.Navigation
 import Cheat
 import Html exposing (Attribute, Html, b, br, button, div, h1, i, input, label, li, text, ul)
 import Html.Attributes as Attributes
@@ -12,7 +13,8 @@ import Nineagram.Guess as Guess exposing (Guess)
 import Process
 import Task exposing (Task)
 import Url
-import Url.Parser exposing ((<?>))
+import Url.Builder
+import Url.Parser
 import Url.Parser.Query
 
 
@@ -37,7 +39,7 @@ its own word list.
 main : Program () Model Msg
 main =
     Browser.application
-        { init = \() url _ -> init url
+        { init = \() url key -> init url key
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
@@ -77,7 +79,7 @@ type alias State =
 
 type Model
     = DefaultPuzzleProblem
-    | DefaultPuzzleLoaded NineagramPuzzle State
+    | DefaultPuzzleLoaded NineagramPuzzle Browser.Navigation.Key State
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -86,17 +88,17 @@ update msg model =
         DefaultPuzzleProblem ->
             ( model, Cmd.none )
 
-        DefaultPuzzleLoaded defaultPuzzle state ->
-            case updateState defaultPuzzle msg state of
+        DefaultPuzzleLoaded defaultPuzzle key state ->
+            case updateState defaultPuzzle key msg state of
                 ( newState, commands ) ->
-                    ( DefaultPuzzleLoaded defaultPuzzle newState, commands )
+                    ( DefaultPuzzleLoaded defaultPuzzle key newState, commands )
 
 
-init : Url.Url -> ( Model, Cmd Msg )
-init url =
+init : Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init url key =
     case Nineagram.fromString "GRNAMNIEA" of
         Ok defaultPuzzle ->
-            ( DefaultPuzzleLoaded defaultPuzzle initState
+            ( DefaultPuzzleLoaded defaultPuzzle key initState
             , Cmd.batch
                 [ focus "puzzleLetters"
                 , case parseQueryParameter "letters" url of
@@ -111,13 +113,20 @@ init url =
         Err _ ->
             ( DefaultPuzzleProblem, Cmd.none )
 
+
+
 {- ignore the path and just get the query parameter -}
+
+
 parseQueryParameter : String -> Url.Url -> Maybe String
 parseQueryParameter target url =
     Url.Parser.parse
-        (Url.Parser.query (Url.Parser.Query.string target))
+        (Url.Parser.query
+            (Url.Parser.Query.string target)
+        )
         { url | path = "" }
         |> Maybe.withDefault Nothing
+
 
 initState : State
 initState =
@@ -154,8 +163,8 @@ type Msg
     | NoOp
 
 
-updateState : NineagramPuzzle -> Msg -> State -> ( State, Cmd Msg )
-updateState _ msg model =
+updateState : NineagramPuzzle -> Browser.Navigation.Key -> Msg -> State -> ( State, Cmd Msg )
+updateState _ key msg model =
     case msg of
         Focussed _ _ ->
             ( model, Cmd.none )
@@ -166,7 +175,7 @@ updateState _ msg model =
         SubmitPuzzleLetters letters ->
             case Nineagram.fromString letters of
                 Ok puzzle ->
-                    startSolving puzzle
+                    startSolving key puzzle
 
                 Err puzzleCreationProblems ->
                     ( { model | puzzleCreationProblems = puzzleCreationProblems }, Cmd.none )
@@ -204,18 +213,24 @@ updateState _ msg model =
             ( model, Cmd.none )
 
 
-startSolving : NineagramPuzzle -> ( State, Cmd Msg )
-startSolving puzzle =
-    ( { initState
-        | puzzle = Just puzzle
-        , letters =
-            Nineagram.getLetters puzzle
-                |> String.fromList
-                |> String.toUpper
-      }
+startSolving : Browser.Navigation.Key -> NineagramPuzzle -> ( State, Cmd Msg )
+startSolving key puzzle =
+    let
+        newModel =
+            { initState
+                | puzzle = Just puzzle
+                , letters =
+                    Nineagram.getLetters puzzle
+                        |> String.fromList
+                        |> String.toUpper
+            }
+    in
+    ( newModel
     , Cmd.batch
         [ focus "guess"
         , solve ComputerSolved puzzle
+        , (Browser.Navigation.pushUrl key << Url.Builder.relative [])
+            [ Url.Builder.string "letters" newModel.letters ]
         ]
     )
 
@@ -360,7 +375,7 @@ view model =
             DefaultPuzzleProblem ->
                 text "Sorry, something went wrong."
 
-            DefaultPuzzleLoaded defaultPuzzle state ->
+            DefaultPuzzleLoaded defaultPuzzle _ state ->
                 viewState defaultPuzzle state
         ]
     }
@@ -378,7 +393,8 @@ viewState defaultPuzzle model =
         , viewGuessing model puzzle
         , viewAttempts model puzzle
         , viewAllSolutions model
-        , h1 [] [ text "Nineagram Solver" ]
+        , h1 []
+            [ text "Nineagram Solver" ]
         ]
 
 
@@ -705,7 +721,7 @@ viewAttempt puzzle attempt =
                 remaining =
                     guess
                         |> Nineagram.remainingLetters puzzle
-                        |> Result.map String.fromList
+                        >> Result.map String.fromList
                         |> Result.withDefault ""
 
                 middleLetter =
@@ -728,13 +744,22 @@ viewAttempt puzzle attempt =
                 , (text << String.toUpper)
                     (String.right 2 remaining)
                 , button [ onClickStopPropagation (DeleteAttempt attempt) ]
-                    [ text "X" ]
+                    [ text "x" ]
                 ]
 
         TwoGuesses firstGuess secondGuess ->
-            div [ Attributes.class "attempt", Attributes.class "twoguesses", Events.onClick (SelectAttempt attempt) ]
-                [ b [] [ text <| String.toUpper <| Guess.toString firstGuess ++ " - " ++ Guess.toString secondGuess ]
-                , button [ Events.stopPropagationOn "click" <| Json.Decode.succeed ( DeleteAttempt attempt, True ) ] [ text "X" ]
+            div
+                [ Attributes.class "attempt"
+                , Attributes.class "twoguesses"
+                , Events.onClick (SelectAttempt attempt)
+                ]
+                [ (b [] << List.singleton << text << String.toUpper)
+                    (Guess.toString firstGuess)
+                , text " - "
+                , (b [] << List.singleton << text << String.toUpper)
+                    (Guess.toString secondGuess)
+                , button [ onClickStopPropagation (DeleteAttempt attempt) ]
+                    [ text "x" ]
                 ]
 
 
@@ -771,14 +796,22 @@ viewAllSolutions model =
             div [ Attributes.class "cheat" ]
                 [ text "The computer is solving... "
                 , br [] []
-                , button [ Attributes.type_ "button", Attributes.disabled True ] [ text "Show me!" ]
+                , button
+                    [ Attributes.type_ "button"
+                    , Attributes.disabled True
+                    ]
+                    [ text "Show me!" ]
                 ]
 
         viewNoPuzzleYet =
             div [ Attributes.class "cheat" ]
                 [ text "The computer will try to solve your puzzle. "
                 , br [] []
-                , button [ Attributes.type_ "button", Attributes.disabled True ] [ text "Show me!" ]
+                , button
+                    [ Attributes.type_ "button"
+                    , Attributes.disabled True
+                    ]
+                    [ text "Show me!" ]
                 ]
     in
     case ( model.puzzle, model.computerSolutions ) of
@@ -793,24 +826,21 @@ viewAllSolutions model =
 
 
 viewSolutions : List ComputerSolution -> Html msg
-viewSolutions solutions =
+viewSolutions =
     ul []
-        (List.map (\solution -> li [] [ viewSolution solution ])
-            solutions
-        )
+        << List.map
+            (li [] << List.singleton << viewSolution)
 
 
 viewSolution : ComputerSolution -> Html msg
 viewSolution (ComputerSolution first matches) =
-    text
-        (String.concat
-            [ Guess.toString first
-            , " "
-            , "("
-            , String.join ", "
-                (List.map Guess.toString
-                    matches
-                )
-            , ")"
-            ]
-        )
+    (text << String.concat)
+        [ Guess.toString first
+        , " "
+        , "("
+        , String.join ", "
+            (List.map Guess.toString
+                matches
+            )
+        , ")"
+        ]
