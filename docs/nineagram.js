@@ -6275,6 +6275,12 @@ var $author$project$Main$addAttempt = F3(
 				});
 		}
 	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Ports$clearQuery = _Platform_outgoingPort(
+	'clearQuery',
+	function ($) {
+		return $elm$json$Json$Encode$null;
+	});
 var $author$project$Main$deleteAttempt = F2(
 	function (attempt, state) {
 		return _Utils_update(
@@ -6575,7 +6581,12 @@ var $author$project$Main$updateState = F4(
 			case 3:
 				return _Utils_Tuple2(
 					$author$project$Main$initState,
-					$author$project$Main$focus('puzzleLetters'));
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Main$focus('puzzleLetters'),
+								$author$project$Ports$clearQuery(0)
+							])));
 			case 10:
 				var solutions = msg.a;
 				return _Utils_Tuple2(

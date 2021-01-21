@@ -10,6 +10,7 @@ import Html.Events as Events
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess as Guess exposing (Guess)
+import Ports
 import Process
 import Task exposing (Task)
 import Url
@@ -204,7 +205,12 @@ updateState _ key msg model =
             ( { model | currentAttempt = model.defaultAttempt }, Cmd.none )
 
         Reset ->
-            ( initState, focus "puzzleLetters" )
+            ( initState
+            , Cmd.batch
+                [ focus "puzzleLetters"
+                , Ports.clearQuery ()
+                ]
+            )
 
         ComputerSolved solutions ->
             ( { model | computerSolutions = Just solutions }, Cmd.none )
