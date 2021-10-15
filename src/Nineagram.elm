@@ -12,7 +12,7 @@ module Nineagram exposing
     , validateGuess
     )
 
-import Nineagram.Guess exposing (Guess)
+import Nineagram.Guess as Guess exposing (Guess)
 
 
 type NineagramPuzzle
@@ -22,51 +22,38 @@ type NineagramPuzzle
 fromCharList : List Char -> Result (List CreationProblem) NineagramPuzzle
 fromCharList letters =
     let
-        length =
-            List.length letters
-
-        checks =
-            [ case List.filter (not << Char.isAlpha) letters of
-                x :: xs ->
-                    Just
-                        (ContainsNonAlphaCharacters x xs)
-
-                [] ->
-                    Nothing
-            , if length < 9 then
-                Just
-                    (LettersTooFew length)
-
-              else if length > 9 then
-                Just
-                    (LettersTooMany length)
-
-              else
-                Nothing
-            ]
-
         problems =
-            checks
-                |> List.filterMap identity
-                
+            let
+                length =
+                    List.length letters
+            in
+            List.filterMap identity
+                [ case List.filter (not << Char.isAlpha) letters of
+                    x :: xs ->
+                        Just (ContainsNonAlphaCharacters x xs)
+
+                    [] ->
+                        Nothing
+                , if length < 9 then
+                    Just (LettersTooFew length)
+
+                  else if length > 9 then
+                    Just (LettersTooMany length)
+
+                  else
+                    Nothing
+                ]
     in
     if problems == [] then
-        Ok
-            (letters
-                |> List.map Char.toLower
-                |> NineagramPuzzle
-            )
+        (Ok << NineagramPuzzle) (List.map Char.toLower letters)
 
     else
         Err problems
 
 
 fromString : String -> Result (List CreationProblem) NineagramPuzzle
-fromString letters =
-    letters
-        |> String.trim
-        |> String.toList
-        |> fromCharList
+fromString =
+    String.trim >> String.toList >> fromCharList
 
 
 getLetters : NineagramPuzzle -> List Char
@@ -84,34 +71,22 @@ type CreationProblem
 
 hasSolutions : NineagramPuzzle -> List Guess -> Guess -> Bool
 hasSolutions nineagram earlierGuesses guess =
-    earlierGuesses |> List.any (\earlierGuess -> guess |> isSolution nineagram earlierGuess)
+    earlierGuesses
+        |> List.any (\earlierGuess -> isSolution nineagram earlierGuess guess)
 
 
 solutions : NineagramPuzzle -> List Guess -> Guess -> List Guess
 solutions nineagram guesses guess =
-    guesses |> List.filter (isSolution nineagram guess)
+    guesses
+        |> List.filter (isSolution nineagram guess)
 
 
 isSolution : NineagramPuzzle -> Guess -> Guess -> Bool
-isSolution (NineagramPuzzle puzzleLetters) guess otherGuess =
-    if getMiddleLetter guess /= getMiddleLetter otherGuess then
-        False
-
-    else
-        case removeLetters puzzleLetters (guess |> Nineagram.Guess.toString |> String.toList) of
-            Err _ ->
-                False
-
-            Ok letters ->
-                case removeLetters letters (otherGuess |> Nineagram.Guess.toString |> String.toList |> removeMiddleLetter) of
-                    Err _ ->
-                        False
-
-                    Ok [] ->
-                        True
-
-                    Ok _ ->
-                        False
+isSolution (NineagramPuzzle puzzleLetters) first second =
+    (Guess.getMiddleLetter first == Guess.getMiddleLetter second)
+        && (List.sort (Guess.getMiddleLetter first :: puzzleLetters)
+                == List.sort (Guess.toList first ++ Guess.toList second)
+           )
 
 
 type GuessProblem
@@ -130,52 +105,32 @@ validateGuess nineagram guess =
 
 remainingLetters : NineagramPuzzle -> Guess -> Result (List GuessProblem) (List Char)
 remainingLetters (NineagramPuzzle puzzleLetters) guess =
-    removeLetters puzzleLetters (String.toList <| Nineagram.Guess.toString guess)
+    removeLettersFrom puzzleLetters
+        (Guess.toList guess)
 
 
-removeLetters : List Char -> List Char -> Result (List GuessProblem) (List Char)
-removeLetters input lettersToRemove =
+removeLettersFrom : List Char -> List Char -> Result (List GuessProblem) (List Char)
+removeLettersFrom input lettersToRemove =
     case lettersToRemove of
         [] ->
             Ok input
 
-        x :: rest ->
-            case removeLetter input x of
-                Err problem ->
-                    Err [ problem ]
-
-                Ok inputWithXRemoved ->
-                    removeLetters inputWithXRemoved rest
+        firstToRemove :: restToRemove ->
+            removeLetterFrom input firstToRemove
+                |> Result.mapError (\err -> [ err ])
+                |> Result.andThen (\remaining -> removeLettersFrom remaining restToRemove)
 
 
-removeLetter : List Char -> Char -> Result GuessProblem (List Char)
-removeLetter input letter =
+removeLetterFrom : List Char -> Char -> Result GuessProblem (List Char)
+removeLetterFrom input letter =
     case input of
         [] ->
             Err (LetterNotFound letter)
 
-        x :: rest ->
-            if x == letter then
+        first :: rest ->
+            if first == letter then
                 Ok rest
 
             else
-                case removeLetter rest letter of
-                    Err err ->
-                        Err err
-
-                    Ok remainingInput ->
-                        Ok (x :: remainingInput)
-
-
-getMiddleLetter : Guess -> List Char
-getMiddleLetter guess =
-    guess
-        |> Nineagram.Guess.toString
-        |> String.toList
-        |> List.take 3
-        |> List.drop 2
-
-
-removeMiddleLetter : List Char -> List Char
-removeMiddleLetter guess =
-    (guess |> List.take 2) ++ (guess |> List.drop 3)
+                removeLetterFrom rest letter
+                    |> Result.map ((::) first)

@@ -4,9 +4,9 @@ import Browser
 import Browser.Dom
 import Browser.Navigation
 import Cheat
-import Html exposing (Attribute, Html, b, br, button, div, h1, i, input, label, li, text, ul)
-import Html.Attributes as Attributes
-import Html.Events as Events
+import Html exposing (Html, b, br, button, div, h1, i, input, label, li, text, ul)
+import Html.Attributes
+import Html.Events
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess as Guess exposing (Guess)
@@ -19,8 +19,8 @@ import Url.Parser
 import Url.Parser.Query
 
 
-{-| The goal in solving a Nineagram puzzle is to find two five-letter words
-from the nine letters provided that share the same middle letter.
+{-| The goal in solving a Nineagram puzzle is to find two five-letter words from
+the nine letters provided that share the same middle letter.
 
 For example, given AEEHPPRSS, one solution is PEARS and SHAPE:
 
@@ -33,8 +33,8 @@ For example, given AEEHPPRSS, one solution is PEARS and SHAPE:
 The main way that the Program assists the user is by displaying the remaining
 letters after the player guesses at one of the words.
 
-The Program can also find and display solutions by exhaustively searching
-its own word list.
+The Program can also find and display solutions by exhaustively searching its
+own word list.
 
 -}
 main : Program () Model Msg
@@ -80,7 +80,14 @@ type alias State =
 
 type Model
     = DefaultPuzzleProblem
-    | DefaultPuzzleLoaded NineagramPuzzle Browser.Navigation.Key State
+    | DefaultPuzzleLoaded LoadedModel
+
+
+type alias LoadedModel =
+    { defaultPuzzle : NineagramPuzzle
+    , navigationKey : Browser.Navigation.Key
+    , state : State
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -89,17 +96,20 @@ update msg model =
         DefaultPuzzleProblem ->
             ( model, Cmd.none )
 
-        DefaultPuzzleLoaded defaultPuzzle key state ->
-            case updateState defaultPuzzle key msg state of
-                ( newState, commands ) ->
-                    ( DefaultPuzzleLoaded defaultPuzzle key newState, commands )
+        DefaultPuzzleLoaded loadedModel ->
+            updateState msg loadedModel
+                |> Tuple.mapFirst (\newState -> DefaultPuzzleLoaded { loadedModel | state = newState })
 
 
 init : Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init url key =
     case Nineagram.fromString "GRNAMNIEA" of
         Ok defaultPuzzle ->
-            ( DefaultPuzzleLoaded defaultPuzzle key initState
+            ( DefaultPuzzleLoaded
+                { defaultPuzzle = defaultPuzzle
+                , navigationKey = key
+                , state = initState
+                }
             , Cmd.batch
                 [ focus "puzzleLetters"
                 , case parseQueryParameter "letters" url of
@@ -121,11 +131,9 @@ init url key =
 
 parseQueryParameter : String -> Url.Url -> Maybe String
 parseQueryParameter target url =
-    Url.Parser.parse
-        (Url.Parser.query
-            (Url.Parser.Query.string target)
-        )
-        { url | path = "" }
+    { url | path = "" }
+        |> Url.Parser.parse
+            (Url.Parser.query (Url.Parser.Query.string target))
         |> Maybe.withDefault Nothing
 
 
@@ -164,45 +172,45 @@ type Msg
     | NoOp
 
 
-updateState : NineagramPuzzle -> Browser.Navigation.Key -> Msg -> State -> ( State, Cmd Msg )
-updateState _ key msg model =
+updateState : Msg -> LoadedModel -> ( State, Cmd Msg )
+updateState msg { navigationKey, state } =
     case msg of
         Focussed _ _ ->
-            ( model, Cmd.none )
+            ( state, Cmd.none )
 
         TypedPuzzleLetters letters ->
-            ( { model | letters = letters |> String.toUpper }, Cmd.none )
+            ( { state | letters = letters |> String.toUpper }, Cmd.none )
 
         SubmitPuzzleLetters letters ->
             case Nineagram.fromString letters of
                 Ok puzzle ->
-                    startSolving key puzzle
+                    startSolving navigationKey puzzle
 
                 Err puzzleCreationProblems ->
-                    ( { model | puzzleCreationProblems = puzzleCreationProblems }, Cmd.none )
+                    ( { state | puzzleCreationProblems = puzzleCreationProblems }, Cmd.none )
 
         TypingGuess typing ->
-            ( { model | guessInput = String.toUpper typing }, Cmd.none )
+            ( { state | guessInput = String.toUpper typing }, Cmd.none )
 
         SubmitAttempt puzzle typed ->
             case Guess.fromString (String.trim typed) of
                 Ok newGuess ->
-                    ( addAttempt { model | guessProblems = [] } puzzle newGuess, Cmd.none )
+                    ( addAttempt { state | guessProblems = [] } puzzle newGuess, Cmd.none )
 
                 Err guessProblems ->
-                    ( { model | guessProblems = guessProblems, guessForPuzzleProblems = [] }, Cmd.none )
+                    ( { state | guessProblems = guessProblems, guessForPuzzleProblems = [] }, Cmd.none )
 
         SelectAttempt attempt ->
-            ( { model | currentAttempt = attempt }, Cmd.none )
+            ( { state | currentAttempt = attempt }, Cmd.none )
 
         DeleteAttempt attempt ->
-            ( deleteAttempt attempt model, Cmd.none )
+            ( deleteAttempt attempt state, Cmd.none )
 
         EnableCheat ->
-            ( { model | cheat = True }, Cmd.none )
+            ( { state | cheat = True }, Cmd.none )
 
         SelectDefaultAttempt ->
-            ( { model | currentAttempt = model.defaultAttempt }, Cmd.none )
+            ( { state | currentAttempt = state.defaultAttempt }, Cmd.none )
 
         Reset ->
             ( initState
@@ -213,10 +221,10 @@ updateState _ key msg model =
             )
 
         ComputerSolved solutions ->
-            ( { model | computerSolutions = Just solutions }, Cmd.none )
+            ( { state | computerSolutions = Just solutions }, Cmd.none )
 
         NoOp ->
-            ( model, Cmd.none )
+            ( state, Cmd.none )
 
 
 startSolving : Browser.Navigation.Key -> NineagramPuzzle -> ( State, Cmd Msg )
@@ -234,9 +242,10 @@ startSolving key puzzle =
     ( newModel
     , Cmd.batch
         [ focus "guess"
-        , solve ComputerSolved puzzle
-        , (Browser.Navigation.pushUrl key << Url.Builder.relative [])
-            [ Url.Builder.string "letters" newModel.letters ]
+        , solve (\solutions -> ComputerSolved solutions)
+            puzzle
+        , Browser.Navigation.pushUrl key
+            (Url.Builder.relative [] [ Url.Builder.string "letters" newModel.letters ])
         ]
     )
 
@@ -377,13 +386,14 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Nineagram Solver"
     , body =
-        [ case model of
-            DefaultPuzzleProblem ->
-                text "Sorry, something went wrong."
+        List.singleton
+            (case model of
+                DefaultPuzzleProblem ->
+                    text "Sorry, something went wrong."
 
-            DefaultPuzzleLoaded defaultPuzzle _ state ->
-                viewState defaultPuzzle state
-        ]
+                DefaultPuzzleLoaded { defaultPuzzle, state } ->
+                    viewState defaultPuzzle state
+            )
     }
 
 
@@ -393,23 +403,25 @@ viewState defaultPuzzle model =
         puzzle =
             Maybe.withDefault defaultPuzzle model.puzzle
     in
-    div (Attributes.class "nineagramSolver" :: keyHandlers model)
+    div
+        (Html.Attributes.class "nineagramSolver"
+            :: keyHandlers model
+        )
         [ viewPuzzleCreation model
         , viewNineagram puzzle model.currentAttempt
         , viewGuessing model puzzle
         , viewAttempts model puzzle
         , viewAllSolutions model
-        , h1 []
-            [ text "Nineagram Solver" ]
+        , h1 [] [ text "Nineagram Solver" ]
         ]
 
 
-keyHandlers : State -> List (Attribute Msg)
+keyHandlers : State -> List (Html.Attribute Msg)
 keyHandlers model =
     case model.puzzle of
         Just _ ->
-            [ Events.on "keydown"
-                (Events.keyCode
+            [ Html.Events.on "keydown"
+                (Html.Events.keyCode
                     |> Json.Decode.andThen
                         (\keyCode ->
                             {- esc -}
@@ -433,66 +445,76 @@ keyHandlers model =
 viewPuzzleCreation : State -> Html Msg
 viewPuzzleCreation model =
     Html.form
-        [ Attributes.class "puzzleform"
-        , Events.onSubmit (SubmitPuzzleLetters model.letters)
+        [ Html.Attributes.class "puzzleform"
+        , Html.Events.onSubmit (SubmitPuzzleLetters model.letters)
         ]
-        [ div [ Attributes.class "lettersInput" ]
-            [ label [ Attributes.for "puzzleLetters" ]
-                [ b []
-                    [ text "Nineagram Letters"
-                    ]
-                ]
+        [ div [ Html.Attributes.class "lettersInput" ]
+            [ label
+                [ Html.Attributes.for "puzzleLetters" ]
+                [ b [] [ text "Nineagram Letters" ] ]
             , br [] []
             , input
-                [ Attributes.type_ "text"
-                , Attributes.id "puzzleLetters"
-                , Attributes.class "lettersInput"
-                , Attributes.spellcheck False
-                , Attributes.autocomplete False
-                , Attributes.value model.letters
-                , Attributes.disabled (model.puzzle /= Nothing)
-                , Events.onInput TypedPuzzleLetters
+                [ Html.Attributes.type_ "text"
+                , Html.Attributes.id "puzzleLetters"
+                , Html.Attributes.class "lettersInput"
+                , Html.Attributes.spellcheck False
+                , Html.Attributes.autocomplete False
+                , Html.Attributes.value model.letters
+                , Html.Attributes.disabled (model.puzzle /= Nothing)
+                , Html.Events.onInput TypedPuzzleLetters
                 ]
                 []
-            , div [ Attributes.class "creationProblems" ]
-                [ viewCreationProblems model.puzzleCreationProblems
-                ]
+            , div
+                [ Html.Attributes.class "creationProblems" ]
+                [ viewCreationProblems model.puzzleCreationProblems ]
             ]
         , div []
-            [ button [ Attributes.disabled (model.puzzle /= Nothing) ]
-                [ text "Submit"
-                ]
+            [ button
+                [ Html.Attributes.disabled (model.puzzle /= Nothing) ]
+                [ text "Submit" ]
             , button
-                [ Attributes.type_ "button"
-                , Events.onClick Reset
+                [ Html.Attributes.type_ "button"
+                , Html.Events.onClick Reset
                 ]
-                [ text "Clear"
-                ]
+                [ text "Clear" ]
             ]
         ]
 
 
 viewCreationProblems : List Nineagram.CreationProblem -> Html Msg
 viewCreationProblems problems =
-    let
-        displayProblem : Nineagram.CreationProblem -> Maybe String
-        displayProblem problem =
-            case problem of
-                Nineagram.LettersTooFew 0 ->
-                    Nothing
+    div [ Html.Attributes.class "creationProblem" ]
+        (List.map (\html -> div [] [ html ])
+            (List.filterMap viewCreationProblem problems)
+        )
 
-                Nineagram.LettersTooFew n ->
-                    Just <| "That's only " ++ String.fromInt n ++ " letters. A puzzle should have exactly nine letters."
 
-                Nineagram.LettersTooMany n ->
-                    Just <| "That's " ++ String.fromInt n ++ " letters. A puzzle should have exactly nine letters."
+viewCreationProblem : Nineagram.CreationProblem -> Maybe (Html msg)
+viewCreationProblem problem =
+    case problem of
+        Nineagram.LettersTooFew 0 ->
+            Nothing
 
-                Nineagram.ContainsNonAlphaCharacters first _ ->
-                    Just <| "That's got a '" ++ String.fromChar first ++ "'. A puzzle should only have letters."
-    in
-    List.filterMap displayProblem problems
-        |> List.map (\message -> div [] [ text message ])
-        |> div [ Attributes.class "creationProblem" ]
+        Nineagram.LettersTooFew n ->
+            (Just << text << String.concat)
+                [ "That's only "
+                , String.fromInt n
+                , " letters. A puzzle should have exactly nine letters."
+                ]
+
+        Nineagram.LettersTooMany n ->
+            (Just << text << String.concat)
+                [ "That's "
+                , String.fromInt n
+                , " letters. A puzzle should have exactly nine letters."
+                ]
+
+        Nineagram.ContainsNonAlphaCharacters firstNonAlpha _ ->
+            (Just << text << String.concat)
+                [ "That's got a '"
+                , String.fromChar firstNonAlpha
+                , "'. A puzzle should only have letters."
+                ]
 
 
 
@@ -525,20 +547,20 @@ viewNineagramNoGuesses puzzle =
         guess _ =
             ""
     in
-    div [ Attributes.class "nineagram" ]
-        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (guess 1) ] [] ]
+    div [ Html.Attributes.class "nineagram" ]
+        [ div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 1), Html.Attributes.value (guess 1) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (guess 2) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 2), Html.Attributes.value (guess 2) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (guess 6) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (guess 7) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (guess 3) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (guess 8) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (guess 9) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 6), Html.Attributes.value (guess 6) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 7), Html.Attributes.value (guess 7) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 3), Html.Attributes.value (guess 3) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 8), Html.Attributes.value (guess 8) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 9), Html.Attributes.value (guess 9) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (guess 4) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 4), Html.Attributes.value (guess 4) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (guess 5) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 5), Html.Attributes.value (guess 5) ] [] ]
         ]
 
 
@@ -565,20 +587,33 @@ viewNineagramOneGuess puzzle guess =
                 |> String.fromList
                 |> String.toUpper
     in
-    div [ Attributes.class "nineagram" ]
-        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (guessLetter 1) ] [] ]
+    div [ Html.Attributes.class "nineagram" ]
+        [ div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 1), Html.Attributes.value (guessLetter 1) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (guessLetter 2) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 2), Html.Attributes.value (guessLetter 2) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (guessLetter 6) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (guessLetter 7) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (guessLetter 3) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (guessLetter 8) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (guessLetter 9) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 6), Html.Attributes.value (guessLetter 6) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 7), Html.Attributes.value (guessLetter 7) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 3), Html.Attributes.value (guessLetter 3) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 8), Html.Attributes.value (guessLetter 8) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 9), Html.Attributes.value (guessLetter 9) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (guessLetter 4) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 4), Html.Attributes.value (guessLetter 4) ] [] ]
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (guessLetter 5) ] [] ]
+        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 5), Html.Attributes.value (guessLetter 5) ] [] ]
+        ]
+
+
+letterbox : { placeholder : String, value : String } -> Html Msg
+letterbox { placeholder, value } =
+    div [ Html.Attributes.class "letterbox" ]
+        [ input
+            [ Html.Attributes.type_ "text"
+            , Html.Attributes.class "letter"
+            , Html.Attributes.placeholder placeholder
+            , Html.Attributes.value value
+            ]
+            []
         ]
 
 
@@ -606,20 +641,20 @@ viewNineagramTwoGuesses _ firstGuess secondGuess =
                 |> String.fromList
                 |> String.toUpper
     in
-    div [ Attributes.class "nineagram", Attributes.class "solution" ]
-        [ div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 1), Attributes.value (firstGuessLetter 1) ] [] ]
+    div [ Html.Attributes.class "nineagram", Html.Attributes.class "solution" ]
+        [ letterbox { placeholder = letter 1, value = firstGuessLetter 1 }
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 2), Attributes.value (firstGuessLetter 2) ] [] ]
+        , letterbox { placeholder = letter 2, value = firstGuessLetter 2 }
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 6), Attributes.value (secondGuessLetter 1) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 7), Attributes.value (secondGuessLetter 2) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 3), Attributes.value (secondGuessLetter 3) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 8), Attributes.value (secondGuessLetter 4) ] [] ]
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 9), Attributes.value (secondGuessLetter 5) ] [] ]
+        , letterbox { placeholder = letter 6, value = secondGuessLetter 1 }
+        , letterbox { placeholder = letter 7, value = secondGuessLetter 2 }
+        , letterbox { placeholder = letter 3, value = secondGuessLetter 3 }
+        , letterbox { placeholder = letter 8, value = secondGuessLetter 4 }
+        , letterbox { placeholder = letter 9, value = secondGuessLetter 5 }
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 4), Attributes.value (firstGuessLetter 4) ] [] ]
+        , letterbox { placeholder = letter 4, value = firstGuessLetter 4 }
         , br [] []
-        , div [ Attributes.class "letterbox" ] [ input [ Attributes.type_ "text", Attributes.class "letter", Attributes.placeholder (letter 5), Attributes.value (firstGuessLetter 5) ] [] ]
+        , letterbox { placeholder = letter 5, value = firstGuessLetter 5 }
         ]
 
 
@@ -630,25 +665,24 @@ viewNineagramTwoGuesses _ firstGuess secondGuess =
 viewGuessing : State -> NineagramPuzzle -> Html Msg
 viewGuessing state puzzle =
     Html.form
-        [ Attributes.class "guessForm"
-        , Events.onSubmit
-            (SubmitAttempt puzzle state.guessInput)
+        [ Html.Attributes.class "guessForm"
+        , Html.Events.onSubmit (SubmitAttempt puzzle state.guessInput)
         ]
-        [ label [ Attributes.for "guess" ]
+        [ label [ Html.Attributes.for "guess" ]
             [ b [] [ text "Next Guess" ] ]
         , br [] []
         , input
-            [ Attributes.id "guess"
-            , Attributes.name "guess"
-            , Attributes.class "lettersInput"
-            , Attributes.autocomplete False
-            , Attributes.spellcheck False
-            , Attributes.disabled (state.puzzle == Nothing)
-            , Attributes.value state.guessInput
-            , Events.onInput TypingGuess
+            [ Html.Attributes.id "guess"
+            , Html.Attributes.name "guess"
+            , Html.Attributes.class "lettersInput"
+            , Html.Attributes.autocomplete False
+            , Html.Attributes.spellcheck False
+            , Html.Attributes.disabled (state.puzzle == Nothing)
+            , Html.Attributes.value state.guessInput
+            , Html.Events.onInput TypingGuess
             ]
             []
-        , div [ Attributes.class "guessProblems" ]
+        , div [ Html.Attributes.class "guessProblems" ]
             [ viewGuessProblems state.guessProblems
             , viewGuessForPuzzleProblems state.guessForPuzzleProblems
             ]
@@ -658,32 +692,38 @@ viewGuessing state puzzle =
 
 viewGuessProblems : List Guess.Problem -> Html Msg
 viewGuessProblems problems =
-    let
-        displayProblem : Guess.Problem -> Maybe String
-        displayProblem problem =
-            case problem of
-                Guess.TooShort 0 ->
-                    Nothing
+    div [ Html.Attributes.class "guessProblem" ]
+        (List.map (\html -> div [] [ html ])
+            (List.filterMap viewGuessProblem problems)
+        )
 
-                Guess.TooShort n ->
-                    Just <| "That's only " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
 
-                Guess.TooLong n ->
-                    Just <| "That's " ++ String.fromInt n ++ " letters. Your words should have exactly five letters."
-    in
-    List.filterMap displayProblem problems
-        |> List.map (\message -> div [] [ text message ])
-        |> div [ Attributes.class "guessProblem" ]
+viewGuessProblem : Guess.Problem -> Maybe (Html msg)
+viewGuessProblem problem =
+    case problem of
+        Guess.TooShort 0 ->
+            Nothing
+
+        Guess.TooShort n ->
+            (Just << text << String.concat)
+                [ "That's only "
+                , String.fromInt n
+                , " letters. Your words should have exactly five letters."
+                ]
+
+        Guess.TooLong n ->
+            (Just << text << String.concat)
+                [ "That's "
+                , String.fromInt n
+                , " letters. Your words should have exactly five letters."
+                ]
 
 
 viewGuessForPuzzleProblems : List Nineagram.GuessProblem -> Html Msg
 viewGuessForPuzzleProblems problems =
-    div [ Attributes.class "guessForPuzzleProblem" ]
-        (List.filterMap
-            (viewGuessForPuzzleProblem
-                >> Maybe.andThen (Just << div [] << List.singleton)
-            )
-            problems
+    div [ Html.Attributes.class "guessForPuzzleProblem" ]
+        (List.map (\html -> div [] [ html ])
+            (List.filterMap viewGuessForPuzzleProblem problems)
         )
 
 
@@ -706,7 +746,7 @@ viewGuessForPuzzleProblem problem =
 
 viewAttempts : State -> NineagramPuzzle -> Html Msg
 viewAttempts model puzzle =
-    div [ Attributes.class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
+    div [ Html.Attributes.class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
 
 
 viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
@@ -714,9 +754,9 @@ viewAttempt puzzle attempt =
     case attempt of
         NoGuesses ->
             div
-                [ Attributes.class "attempt"
-                , Attributes.class "noguesses"
-                , Events.onClick (SelectAttempt attempt)
+                [ Html.Attributes.class "attempt"
+                , Html.Attributes.class "noguesses"
+                , Html.Events.onClick (SelectAttempt attempt)
                 ]
                 [ i []
                     [ text "New word" ]
@@ -735,9 +775,9 @@ viewAttempt puzzle attempt =
                         guess
             in
             div
-                [ Attributes.class "attempt"
-                , Attributes.class "oneguess"
-                , Events.onClick (SelectAttempt attempt)
+                [ Html.Attributes.class "attempt"
+                , Html.Attributes.class "oneguess"
+                , Html.Events.onClick (SelectAttempt attempt)
                 ]
                 [ (b [] << List.singleton << text << String.toUpper)
                     (Guess.toString guess)
@@ -755,9 +795,9 @@ viewAttempt puzzle attempt =
 
         TwoGuesses firstGuess secondGuess ->
             div
-                [ Attributes.class "attempt"
-                , Attributes.class "twoguesses"
-                , Events.onClick (SelectAttempt attempt)
+                [ Html.Attributes.class "attempt"
+                , Html.Attributes.class "twoguesses"
+                , Html.Events.onClick (SelectAttempt attempt)
                 ]
                 [ (b [] << List.singleton << text << String.toUpper)
                     (Guess.toString firstGuess)
@@ -769,14 +809,14 @@ viewAttempt puzzle attempt =
                 ]
 
 
-onClickStopPropagation : msg -> Attribute msg
+onClickStopPropagation : msg -> Html.Attribute msg
 onClickStopPropagation =
     alwaysStopPropagationOn "click"
 
 
-alwaysStopPropagationOn : String -> msg -> Attribute msg
+alwaysStopPropagationOn : String -> msg -> Html.Attribute msg
 alwaysStopPropagationOn event msg =
-    Events.stopPropagationOn event
+    Html.Events.stopPropagationOn event
         (Json.Decode.succeed ( msg, True ))
 
 
@@ -788,34 +828,39 @@ viewAllSolutions : State -> Html Msg
 viewAllSolutions model =
     let
         viewComputerSolved computerSolutions =
-            div [ Attributes.class "cheat" ]
-                [ text <| "The computer found " ++ (String.fromInt << List.length) computerSolutions ++ " solutions. "
+            div [ Html.Attributes.class "cheat" ]
+                [ (text << String.concat)
+                    [ "The computer found "
+                    , (String.fromInt << List.length) computerSolutions
+                    , " solutions."
+                    ]
                 , br [] []
-                , if not <| model.cheat then
-                    button [ Attributes.type_ "button", Events.onClick EnableCheat ] [ text "Show me!" ]
+                , if model.cheat then
+                    viewSolutions computerSolutions
 
                   else
-                    viewSolutions computerSolutions
+                    button [ Html.Attributes.type_ "button", Html.Events.onClick EnableCheat ]
+                        [ text "Show me!" ]
                 ]
 
         viewComputerStillSolving =
-            div [ Attributes.class "cheat" ]
+            div [ Html.Attributes.class "cheat" ]
                 [ text "The computer is solving... "
                 , br [] []
                 , button
-                    [ Attributes.type_ "button"
-                    , Attributes.disabled True
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.disabled True
                     ]
                     [ text "Show me!" ]
                 ]
 
         viewNoPuzzleYet =
-            div [ Attributes.class "cheat" ]
+            div [ Html.Attributes.class "cheat" ]
                 [ text "The computer will try to solve your puzzle. "
                 , br [] []
                 , button
-                    [ Attributes.type_ "button"
-                    , Attributes.disabled True
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.disabled True
                     ]
                     [ text "Show me!" ]
                 ]
@@ -832,12 +877,15 @@ viewAllSolutions model =
 
 
 viewSolutions : List ComputerSolution -> Html msg
-viewSolutions =
+viewSolutions solutions =
     ul []
-        << List.map
-            (li [] << List.singleton << viewSolution)
+        (List.map (\sln -> li [] [ viewSolution sln ])
+            solutions
+        )
 
 
+{-| For example, "pears (heaps, phase, shape)"
+-}
 viewSolution : ComputerSolution -> Html msg
 viewSolution (ComputerSolution first matches) =
     (text << String.concat)

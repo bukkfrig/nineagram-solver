@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.T.G === region.Y.G)
+	if (region.W.G === region.aa.G)
 	{
-		return 'on line ' + region.T.G;
+		return 'on line ' + region.W.G;
 	}
-	return 'on lines ' + region.T.G + ' through ' + region.Y.G;
+	return 'on lines ' + region.W.G + ' through ' + region.aa.G;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aM,
-		impl.aK,
+		impl.aG,
+		impl.aP,
+		impl.aN,
 		function() { return function() {} }
 	);
 });
@@ -2660,8 +2660,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		q: func(record.q),
-		U: record.U,
-		R: record.R
+		X: record.X,
+		U: record.U
 	}
 });
 
@@ -2930,10 +2930,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.q;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.U;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.X;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.R) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.U) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3883,11 +3883,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aM,
-		impl.aK,
+		impl.aG,
+		impl.aP,
+		impl.aN,
 		function(sendToApp, initialModel) {
-			var view = impl.aN;
+			var view = impl.aQ;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3919,12 +3919,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aD,
-		impl.aM,
-		impl.aK,
+		impl.aG,
+		impl.aP,
+		impl.aN,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.S && impl.S(sendToApp)
-			var view = impl.aN;
+			var divertHrefToApp = impl.V && impl.V(sendToApp)
+			var view = impl.aQ;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3932,12 +3932,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aw);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.az);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.aL) && (_VirtualDom_doc.title = title = doc.aL);
+				(title !== doc.aO) && (_VirtualDom_doc.title = title = doc.aO);
 			});
 		}
 	);
@@ -3993,12 +3993,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.aF;
-	var onUrlRequest = impl.aG;
+	var onUrlChange = impl.aI;
+	var onUrlRequest = impl.aJ;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		S: function(sendToApp)
+		V: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4014,9 +4014,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.aj === next.aj
-							&& curr.ab === next.ab
-							&& curr.ag.a === next.ag.a
+							&& curr.am === next.am
+							&& curr.ae === next.ae
+							&& curr.aj.a === next.aj.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4024,13 +4024,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		aD: function(flags)
+		aG: function(flags)
 		{
-			return A3(impl.aD, flags, _Browser_getUrl(), key);
+			return A3(impl.aG, flags, _Browser_getUrl(), key);
 		},
-		aN: impl.aN,
-		aM: impl.aM,
-		aK: impl.aK
+		aQ: impl.aQ,
+		aP: impl.aP,
+		aN: impl.aN
 	});
 }
 
@@ -4096,17 +4096,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { aB: 'hidden', ax: 'visibilitychange' }
+		? { aE: 'hidden', aA: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { aB: 'mozHidden', ax: 'mozvisibilitychange' }
+		? { aE: 'mozHidden', aA: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { aB: 'msHidden', ax: 'msvisibilitychange' }
+		? { aE: 'msHidden', aA: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { aB: 'webkitHidden', ax: 'webkitvisibilitychange' }
-		: { aB: 'hidden', ax: 'visibilitychange' };
+		? { aE: 'webkitHidden', aA: 'webkitvisibilitychange' }
+		: { aE: 'hidden', aA: 'visibilitychange' };
 }
 
 
@@ -4187,12 +4187,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		an: _Browser_getScene(),
-		aq: {
-			as: _Browser_window.pageXOffset,
-			at: _Browser_window.pageYOffset,
-			ar: _Browser_doc.documentElement.clientWidth,
-			aa: _Browser_doc.documentElement.clientHeight
+		aq: _Browser_getScene(),
+		at: {
+			av: _Browser_window.pageXOffset,
+			aw: _Browser_window.pageYOffset,
+			au: _Browser_doc.documentElement.clientWidth,
+			ad: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4202,8 +4202,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		ar: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		aa: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		au: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		ad: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4226,15 +4226,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			an: {
-				ar: node.scrollWidth,
-				aa: node.scrollHeight
-			},
 			aq: {
-				as: node.scrollLeft,
-				at: node.scrollTop,
-				ar: node.clientWidth,
-				aa: node.clientHeight
+				au: node.scrollWidth,
+				ad: node.scrollHeight
+			},
+			at: {
+				av: node.scrollLeft,
+				aw: node.scrollTop,
+				au: node.clientWidth,
+				ad: node.clientHeight
 			}
 		};
 	});
@@ -4264,18 +4264,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			an: _Browser_getScene(),
-			aq: {
-				as: x,
-				at: y,
-				ar: _Browser_doc.documentElement.clientWidth,
-				aa: _Browser_doc.documentElement.clientHeight
+			aq: _Browser_getScene(),
+			at: {
+				av: x,
+				aw: y,
+				au: _Browser_doc.documentElement.clientWidth,
+				ad: _Browser_doc.documentElement.clientHeight
 			},
-			az: {
-				as: x + rect.left,
-				at: y + rect.top,
-				ar: rect.width,
-				aa: rect.height
+			aC: {
+				av: x + rect.left,
+				aw: y + rect.top,
+				au: rect.width,
+				ad: rect.height
 			}
 		};
 	});
@@ -4737,22 +4737,22 @@ var $elm$core$Array$builderToArray = F2(
 		if (!builder.a) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.c),
+				$elm$core$Elm$JsArray$length(builder.b),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.c);
+				builder.b);
 		} else {
 			var treeLen = builder.a * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.d) : builder.d;
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.c) : builder.c;
 			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.a);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.c) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.b) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.c);
+				builder.b);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4765,7 +4765,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{d: nodeList, a: (len / $elm$core$Array$branchFactor) | 0, c: tail});
+					{c: nodeList, a: (len / $elm$core$Array$branchFactor) | 0, b: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4832,7 +4832,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {_: fragment, ab: host, aI: path, ag: port_, aj: protocol, ak: query};
+		return {ac: fragment, ae: host, aL: path, aj: port_, am: protocol, an: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5111,10 +5111,9 @@ var $elm$core$Task$perform = F2(
 			A2($elm$core$Task$map, toMessage, task));
 	});
 var $elm$browser$Browser$application = _Browser_application;
-var $author$project$Main$DefaultPuzzleLoaded = F3(
-	function (a, b, c) {
-		return {$: 1, a: a, b: b, c: c};
-	});
+var $author$project$Main$DefaultPuzzleLoaded = function (a) {
+	return {$: 1, a: a};
+};
 var $author$project$Main$DefaultPuzzleProblem = {$: 0};
 var $author$project$Main$SubmitPuzzleLetters = function (a) {
 	return {$: 2, a: a};
@@ -5154,6 +5153,11 @@ var $author$project$Main$focus = function (id) {
 		$author$project$Main$Focussed(id),
 		$elm$browser$Browser$Dom$focus(id));
 };
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $author$project$Nineagram$ContainsNonAlphaCharacters = F2(
 	function (a, b) {
 		return {$: 0, a: a, b: b};
@@ -5197,29 +5201,33 @@ var $elm$core$List$filterMap = F2(
 var $elm$core$Basics$not = _Basics_not;
 var $elm$core$Char$toLower = _Char_toLower;
 var $author$project$Nineagram$fromCharList = function (letters) {
-	var length = $elm$core$List$length(letters);
-	var checks = _List_fromArray(
-		[
-			function () {
-			var _v0 = A2(
-				$elm$core$List$filter,
-				A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$Char$isAlpha),
-				letters);
-			if (_v0.b) {
-				var x = _v0.a;
-				var xs = _v0.b;
-				return $elm$core$Maybe$Just(
-					A2($author$project$Nineagram$ContainsNonAlphaCharacters, x, xs));
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		}(),
-			(length < 9) ? $elm$core$Maybe$Just(
-			$author$project$Nineagram$LettersTooFew(length)) : ((length > 9) ? $elm$core$Maybe$Just(
-			$author$project$Nineagram$LettersTooMany(length)) : $elm$core$Maybe$Nothing)
-		]);
-	var problems = A2($elm$core$List$filterMap, $elm$core$Basics$identity, checks);
-	return _Utils_eq(problems, _List_Nil) ? $elm$core$Result$Ok(
+	var problems = function () {
+		var length = $elm$core$List$length(letters);
+		return A2(
+			$elm$core$List$filterMap,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					function () {
+					var _v0 = A2(
+						$elm$core$List$filter,
+						A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$Char$isAlpha),
+						letters);
+					if (_v0.b) {
+						var x = _v0.a;
+						var xs = _v0.b;
+						return $elm$core$Maybe$Just(
+							A2($author$project$Nineagram$ContainsNonAlphaCharacters, x, xs));
+					} else {
+						return $elm$core$Maybe$Nothing;
+					}
+				}(),
+					(length < 9) ? $elm$core$Maybe$Just(
+					$author$project$Nineagram$LettersTooFew(length)) : ((length > 9) ? $elm$core$Maybe$Just(
+					$author$project$Nineagram$LettersTooMany(length)) : $elm$core$Maybe$Nothing)
+				]));
+	}();
+	return _Utils_eq(problems, _List_Nil) ? A2($elm$core$Basics$composeL, $elm$core$Result$Ok, $elm$core$Basics$identity)(
 		A2($elm$core$List$map, $elm$core$Char$toLower, letters)) : $elm$core$Result$Err(problems);
 };
 var $elm$core$String$foldr = _String_foldr;
@@ -5227,17 +5235,16 @@ var $elm$core$String$toList = function (string) {
 	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
 };
 var $elm$core$String$trim = _String_trim;
-var $author$project$Nineagram$fromString = function (letters) {
-	return $author$project$Nineagram$fromCharList(
-		$elm$core$String$toList(
-			$elm$core$String$trim(letters)));
-};
+var $author$project$Nineagram$fromString = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$String$trim,
+	A2($elm$core$Basics$composeR, $elm$core$String$toList, $author$project$Nineagram$fromCharList));
 var $author$project$Main$NoGuesses = {$: 0};
-var $author$project$Main$initState = {t: _List_Nil, L: false, M: $elm$core$Maybe$Nothing, j: $author$project$Main$NoGuesses, N: $author$project$Main$NoGuesses, A: _List_Nil, B: '', F: _List_Nil, v: '', n: $elm$core$Maybe$Nothing, O: _List_Nil};
+var $author$project$Main$initState = {t: _List_Nil, M: false, N: $elm$core$Maybe$Nothing, i: $author$project$Main$NoGuesses, O: $author$project$Main$NoGuesses, A: _List_Nil, B: '', F: _List_Nil, v: '', o: $elm$core$Maybe$Nothing, P: _List_Nil};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
-		return {u: frag, w: params, s: unvisited, o: value, y: visited};
+		return {u: frag, w: params, s: unvisited, m: value, y: visited};
 	});
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -5249,10 +5256,10 @@ var $elm$url$Url$Parser$getFirstMatch = function (states) {
 			var rest = states.b;
 			var _v1 = state.s;
 			if (!_v1.b) {
-				return $elm$core$Maybe$Just(state.o);
+				return $elm$core$Maybe$Just(state.m);
 			} else {
 				if ((_v1.a === '') && (!_v1.b.b)) {
-					return $elm$core$Maybe$Just(state.o);
+					return $elm$core$Maybe$Just(state.m);
 				} else {
 					var $temp$states = rest;
 					states = $temp$states;
@@ -5864,9 +5871,9 @@ var $elm$url$Url$Parser$parse = F2(
 				A5(
 					$elm$url$Url$Parser$State,
 					_List_Nil,
-					$elm$url$Url$Parser$preparePath(url.aI),
-					$elm$url$Url$Parser$prepareQuery(url.ak),
-					url._,
+					$elm$url$Url$Parser$preparePath(url.aL),
+					$elm$url$Url$Parser$prepareQuery(url.an),
+					url.ac,
 					$elm$core$Basics$identity)));
 	});
 var $elm$url$Url$Parser$Parser = $elm$core$Basics$identity;
@@ -5877,7 +5884,7 @@ var $elm$url$Url$Parser$query = function (_v0) {
 		var unvisited = _v1.s;
 		var params = _v1.w;
 		var frag = _v1.u;
-		var value = _v1.o;
+		var value = _v1.m;
 		return _List_fromArray(
 			[
 				A5(
@@ -5935,7 +5942,7 @@ var $author$project$Main$parseQueryParameter = F2(
 					$elm$url$Url$Parser$Query$string(target)),
 				_Utils_update(
 					url,
-					{aI: ''})));
+					{aL: ''})));
 	});
 var $author$project$Main$init = F2(
 	function (url, key) {
@@ -5943,7 +5950,8 @@ var $author$project$Main$init = F2(
 		if (!_v0.$) {
 			var defaultPuzzle = _v0.a;
 			return _Utils_Tuple2(
-				A3($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, key, $author$project$Main$initState),
+				$author$project$Main$DefaultPuzzleLoaded(
+					{Q: defaultPuzzle, S: key, H: $author$project$Main$initState}),
 				$elm$core$Platform$Cmd$batch(
 					_List_fromArray(
 						[
@@ -5967,12 +5975,249 @@ var $author$project$Main$init = F2(
 	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $elm$core$Tuple$mapFirst = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			func(x),
+			y);
+	});
 var $author$project$Main$OneGuess = function (a) {
 	return {$: 1, a: a};
 };
 var $author$project$Main$TwoGuesses = F2(
 	function (a, b) {
 		return {$: 2, a: a, b: b};
+	});
+var $author$project$Nineagram$Guess$getMiddleLetter = function (_v0) {
+	var s = _v0;
+	var _v1 = A2(
+		$elm$core$Basics$composeR,
+		A2($elm$core$String$slice, 2, 3),
+		$elm$core$String$toList)(s);
+	if (_v1.b && (!_v1.b.b)) {
+		var letter = _v1.a;
+		return letter;
+	} else {
+		return ' ';
+	}
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
+var $author$project$Nineagram$Guess$toList = function (_v0) {
+	var s = _v0;
+	return $elm$core$String$toList(s);
+};
+var $author$project$Nineagram$isSolution = F3(
+	function (_v0, first, second) {
+		var puzzleLetters = _v0;
+		return _Utils_eq(
+			$author$project$Nineagram$Guess$getMiddleLetter(first),
+			$author$project$Nineagram$Guess$getMiddleLetter(second)) && _Utils_eq(
+			$elm$core$List$sort(
+				A2(
+					$elm$core$List$cons,
+					$author$project$Nineagram$Guess$getMiddleLetter(first),
+					puzzleLetters)),
+			$elm$core$List$sort(
+				_Utils_ap(
+					$author$project$Nineagram$Guess$toList(first),
+					$author$project$Nineagram$Guess$toList(second))));
+	});
+var $elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (!result.$) {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return $elm$core$Result$Err(msg);
+		}
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (!result.$) {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $author$project$Nineagram$LetterNotFound = $elm$core$Basics$identity;
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (!ra.$) {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
+var $author$project$Nineagram$removeLetterFrom = F2(
+	function (input, letter) {
+		if (!input.b) {
+			return $elm$core$Result$Err(letter);
+		} else {
+			var first = input.a;
+			var rest = input.b;
+			return _Utils_eq(first, letter) ? $elm$core$Result$Ok(rest) : A2(
+				$elm$core$Result$map,
+				$elm$core$List$cons(first),
+				A2($author$project$Nineagram$removeLetterFrom, rest, letter));
+		}
+	});
+var $author$project$Nineagram$removeLettersFrom = F2(
+	function (input, lettersToRemove) {
+		if (!lettersToRemove.b) {
+			return $elm$core$Result$Ok(input);
+		} else {
+			var firstToRemove = lettersToRemove.a;
+			var restToRemove = lettersToRemove.b;
+			return A2(
+				$elm$core$Result$andThen,
+				function (remaining) {
+					return A2($author$project$Nineagram$removeLettersFrom, remaining, restToRemove);
+				},
+				A2(
+					$elm$core$Result$mapError,
+					function (err) {
+						return _List_fromArray(
+							[err]);
+					},
+					A2($author$project$Nineagram$removeLetterFrom, input, firstToRemove)));
+		}
+	});
+var $author$project$Nineagram$remainingLetters = F2(
+	function (_v0, guess) {
+		var puzzleLetters = _v0;
+		return A2(
+			$author$project$Nineagram$removeLettersFrom,
+			puzzleLetters,
+			$author$project$Nineagram$Guess$toList(guess));
+	});
+var $author$project$Nineagram$validateGuess = F2(
+	function (nineagram, guess) {
+		var _v0 = A2($author$project$Nineagram$remainingLetters, nineagram, guess);
+		if (!_v0.$) {
+			return $elm$core$Result$Ok(0);
+		} else {
+			var problems = _v0.a;
+			return $elm$core$Result$Err(problems);
+		}
+	});
+var $author$project$Main$addAttempt = F3(
+	function (model, puzzle, guess) {
+		var _v0 = A2($author$project$Nineagram$validateGuess, puzzle, guess);
+		if (_v0.$ === 1) {
+			var problems = _v0.a;
+			return _Utils_update(
+				model,
+				{A: problems});
+		} else {
+			var newAttempt = function () {
+				var _v1 = model.i;
+				switch (_v1.$) {
+					case 0:
+						return $author$project$Main$OneGuess(guess);
+					case 1:
+						var firstGuess = _v1.a;
+						return A3($author$project$Nineagram$isSolution, puzzle, firstGuess, guess) ? A2($author$project$Main$TwoGuesses, firstGuess, guess) : $author$project$Main$OneGuess(guess);
+					default:
+						return $author$project$Main$OneGuess(guess);
+				}
+			}();
+			return _Utils_update(
+				model,
+				{
+					t: A2($elm$core$List$cons, newAttempt, model.t),
+					i: newAttempt,
+					A: _List_Nil,
+					B: ''
+				});
+		}
+	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Ports$clearQuery = _Platform_outgoingPort(
+	'clearQuery',
+	function ($) {
+		return $elm$json$Json$Encode$null;
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Main$deleteAttempt = F2(
+	function (attempt, state) {
+		return _Utils_update(
+			state,
+			{
+				t: A2(
+					$elm$core$List$filter,
+					function (a) {
+						return !_Utils_eq(a, attempt);
+					},
+					state.t),
+				i: _Utils_eq(state.i, attempt) ? state.O : state.i
+			});
+	});
+var $author$project$Nineagram$Guess$Guess = $elm$core$Basics$identity;
+var $author$project$Nineagram$Guess$TooLong = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Nineagram$Guess$TooShort = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$core$String$toLower = _String_toLower;
+var $author$project$Nineagram$Guess$fromString = function (guess) {
+	var length = $elm$core$String$length(guess);
+	return (length < 5) ? $elm$core$Result$Err(
+		_List_fromArray(
+			[
+				$author$project$Nineagram$Guess$TooShort(length)
+			])) : ((length > 5) ? $elm$core$Result$Err(
+		_List_fromArray(
+			[
+				$author$project$Nineagram$Guess$TooLong(length)
+			])) : A2($elm$core$Basics$composeL, $elm$core$Result$Ok, $elm$core$Basics$identity)(
+		$elm$core$String$toLower(guess)));
+};
+var $author$project$Main$ComputerSolved = function (a) {
+	return {$: 10, a: a};
+};
+var $elm$core$String$fromList = _String_fromList;
+var $author$project$Nineagram$getLetters = function (_v0) {
+	var letters = _v0;
+	return letters;
+};
+var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$relative = F2(
+	function (pathSegments, parameters) {
+		return _Utils_ap(
+			A2($elm$core$String$join, '/', pathSegments),
+			$elm$url$Url$Builder$toQuery(parameters));
+	});
+var $author$project$Main$ComputerSolution = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
 	});
 var $elm$core$List$drop = F2(
 	function (n, list) {
@@ -5995,6 +6240,7 @@ var $elm$core$List$drop = F2(
 			}
 		}
 	});
+var $elm$core$Process$sleep = _Process_sleep;
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
 		takeReverse:
@@ -6121,236 +6367,6 @@ var $elm$core$List$take = F2(
 	function (n, list) {
 		return A3($elm$core$List$takeFast, 0, n, list);
 	});
-var $author$project$Nineagram$Guess$toString = function (_v0) {
-	var s = _v0;
-	return s;
-};
-var $author$project$Nineagram$getMiddleLetter = function (guess) {
-	return A2(
-		$elm$core$List$drop,
-		2,
-		A2(
-			$elm$core$List$take,
-			3,
-			$elm$core$String$toList(
-				$author$project$Nineagram$Guess$toString(guess))));
-};
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Nineagram$LetterNotFound = $elm$core$Basics$identity;
-var $author$project$Nineagram$removeLetter = F2(
-	function (input, letter) {
-		if (!input.b) {
-			return $elm$core$Result$Err(letter);
-		} else {
-			var x = input.a;
-			var rest = input.b;
-			if (_Utils_eq(x, letter)) {
-				return $elm$core$Result$Ok(rest);
-			} else {
-				var _v1 = A2($author$project$Nineagram$removeLetter, rest, letter);
-				if (_v1.$ === 1) {
-					var err = _v1.a;
-					return $elm$core$Result$Err(err);
-				} else {
-					var remainingInput = _v1.a;
-					return $elm$core$Result$Ok(
-						A2($elm$core$List$cons, x, remainingInput));
-				}
-			}
-		}
-	});
-var $author$project$Nineagram$removeLetters = F2(
-	function (input, lettersToRemove) {
-		removeLetters:
-		while (true) {
-			if (!lettersToRemove.b) {
-				return $elm$core$Result$Ok(input);
-			} else {
-				var x = lettersToRemove.a;
-				var rest = lettersToRemove.b;
-				var _v1 = A2($author$project$Nineagram$removeLetter, input, x);
-				if (_v1.$ === 1) {
-					var problem = _v1.a;
-					return $elm$core$Result$Err(
-						_List_fromArray(
-							[problem]));
-				} else {
-					var inputWithXRemoved = _v1.a;
-					var $temp$input = inputWithXRemoved,
-						$temp$lettersToRemove = rest;
-					input = $temp$input;
-					lettersToRemove = $temp$lettersToRemove;
-					continue removeLetters;
-				}
-			}
-		}
-	});
-var $author$project$Nineagram$removeMiddleLetter = function (guess) {
-	return _Utils_ap(
-		A2($elm$core$List$take, 2, guess),
-		A2($elm$core$List$drop, 3, guess));
-};
-var $author$project$Nineagram$isSolution = F3(
-	function (_v0, guess, otherGuess) {
-		var puzzleLetters = _v0;
-		if (!_Utils_eq(
-			$author$project$Nineagram$getMiddleLetter(guess),
-			$author$project$Nineagram$getMiddleLetter(otherGuess))) {
-			return false;
-		} else {
-			var _v1 = A2(
-				$author$project$Nineagram$removeLetters,
-				puzzleLetters,
-				$elm$core$String$toList(
-					$author$project$Nineagram$Guess$toString(guess)));
-			if (_v1.$ === 1) {
-				return false;
-			} else {
-				var letters = _v1.a;
-				var _v2 = A2(
-					$author$project$Nineagram$removeLetters,
-					letters,
-					$author$project$Nineagram$removeMiddleLetter(
-						$elm$core$String$toList(
-							$author$project$Nineagram$Guess$toString(otherGuess))));
-				if (_v2.$ === 1) {
-					return false;
-				} else {
-					if (!_v2.a.b) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-			}
-		}
-	});
-var $author$project$Nineagram$remainingLetters = F2(
-	function (_v0, guess) {
-		var puzzleLetters = _v0;
-		return A2(
-			$author$project$Nineagram$removeLetters,
-			puzzleLetters,
-			$elm$core$String$toList(
-				$author$project$Nineagram$Guess$toString(guess)));
-	});
-var $author$project$Nineagram$validateGuess = F2(
-	function (nineagram, guess) {
-		var _v0 = A2($author$project$Nineagram$remainingLetters, nineagram, guess);
-		if (!_v0.$) {
-			return $elm$core$Result$Ok(0);
-		} else {
-			var problems = _v0.a;
-			return $elm$core$Result$Err(problems);
-		}
-	});
-var $author$project$Main$addAttempt = F3(
-	function (model, puzzle, guess) {
-		var _v0 = A2($author$project$Nineagram$validateGuess, puzzle, guess);
-		if (_v0.$ === 1) {
-			var problems = _v0.a;
-			return _Utils_update(
-				model,
-				{A: problems});
-		} else {
-			var newAttempt = function () {
-				var _v1 = model.j;
-				switch (_v1.$) {
-					case 0:
-						return $author$project$Main$OneGuess(guess);
-					case 1:
-						var firstGuess = _v1.a;
-						return A3($author$project$Nineagram$isSolution, puzzle, firstGuess, guess) ? A2($author$project$Main$TwoGuesses, firstGuess, guess) : $author$project$Main$OneGuess(guess);
-					default:
-						return $author$project$Main$OneGuess(guess);
-				}
-			}();
-			return _Utils_update(
-				model,
-				{
-					t: A2($elm$core$List$cons, newAttempt, model.t),
-					j: newAttempt,
-					A: _List_Nil,
-					B: ''
-				});
-		}
-	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $author$project$Ports$clearQuery = _Platform_outgoingPort(
-	'clearQuery',
-	function ($) {
-		return $elm$json$Json$Encode$null;
-	});
-var $author$project$Main$deleteAttempt = F2(
-	function (attempt, state) {
-		return _Utils_update(
-			state,
-			{
-				t: A2(
-					$elm$core$List$filter,
-					function (a) {
-						return !_Utils_eq(a, attempt);
-					},
-					state.t),
-				j: _Utils_eq(state.j, attempt) ? state.N : state.j
-			});
-	});
-var $author$project$Nineagram$Guess$Guess = $elm$core$Basics$identity;
-var $author$project$Nineagram$Guess$TooLong = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$Nineagram$Guess$TooShort = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$core$String$toLower = _String_toLower;
-var $author$project$Nineagram$Guess$fromString = function (guess) {
-	var length = $elm$core$String$length(guess);
-	return (length < 5) ? $elm$core$Result$Err(
-		_List_fromArray(
-			[
-				$author$project$Nineagram$Guess$TooShort(length)
-			])) : ((length > 5) ? $elm$core$Result$Err(
-		_List_fromArray(
-			[
-				$author$project$Nineagram$Guess$TooLong(length)
-			])) : $elm$core$Result$Ok(
-		$elm$core$String$toLower(guess)));
-};
-var $author$project$Main$ComputerSolved = function (a) {
-	return {$: 10, a: a};
-};
-var $elm$core$String$fromList = _String_fromList;
-var $author$project$Nineagram$getLetters = function (_v0) {
-	var letters = _v0;
-	return letters;
-};
-var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
-var $elm$url$Url$Builder$toQueryPair = function (_v0) {
-	var key = _v0.a;
-	var value = _v0.b;
-	return key + ('=' + value);
-};
-var $elm$url$Url$Builder$toQuery = function (parameters) {
-	if (!parameters.b) {
-		return '';
-	} else {
-		return '?' + A2(
-			$elm$core$String$join,
-			'&',
-			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
-	}
-};
-var $elm$url$Url$Builder$relative = F2(
-	function (pathSegments, parameters) {
-		return _Utils_ap(
-			A2($elm$core$String$join, '/', pathSegments),
-			$elm$url$Url$Builder$toQuery(parameters));
-	});
-var $author$project$Main$ComputerSolution = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$batchedFoldl = F4(
 	function (batchSize, reducer, ini, list) {
 		var remainingItems = A2($elm$core$List$drop, batchSize, list);
@@ -6474,7 +6490,7 @@ var $author$project$Main$startSolving = F2(
 				v: $elm$core$String$toUpper(
 					$elm$core$String$fromList(
 						$author$project$Nineagram$getLetters(puzzle))),
-				n: $elm$core$Maybe$Just(puzzle)
+				o: $elm$core$Maybe$Just(puzzle)
 			});
 		return _Utils_Tuple2(
 			newModel,
@@ -6482,27 +6498,36 @@ var $author$project$Main$startSolving = F2(
 				_List_fromArray(
 					[
 						$author$project$Main$focus('guess'),
-						A2($author$project$Main$solve, $author$project$Main$ComputerSolved, puzzle),
 						A2(
-						$elm$core$Basics$composeL,
-						$elm$browser$Browser$Navigation$pushUrl(key),
-						$elm$url$Url$Builder$relative(_List_Nil))(
-						_List_fromArray(
-							[
-								A2($elm$url$Url$Builder$string, 'letters', newModel.v)
-							]))
+						$author$project$Main$solve,
+						function (solutions) {
+							return $author$project$Main$ComputerSolved(solutions);
+						},
+						puzzle),
+						A2(
+						$elm$browser$Browser$Navigation$pushUrl,
+						key,
+						A2(
+							$elm$url$Url$Builder$relative,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2($elm$url$Url$Builder$string, 'letters', newModel.v)
+								])))
 					])));
 	});
-var $author$project$Main$updateState = F4(
-	function (_v0, key, msg, model) {
+var $author$project$Main$updateState = F2(
+	function (msg, _v0) {
+		var navigationKey = _v0.S;
+		var state = _v0.H;
 		switch (msg.$) {
 			case 0:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
 			case 1:
 				var letters = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
+						state,
 						{
 							v: $elm$core$String$toUpper(letters)
 						}),
@@ -6512,20 +6537,20 @@ var $author$project$Main$updateState = F4(
 				var _v2 = $author$project$Nineagram$fromString(letters);
 				if (!_v2.$) {
 					var puzzle = _v2.a;
-					return A2($author$project$Main$startSolving, key, puzzle);
+					return A2($author$project$Main$startSolving, navigationKey, puzzle);
 				} else {
 					var puzzleCreationProblems = _v2.a;
 					return _Utils_Tuple2(
 						_Utils_update(
-							model,
-							{O: puzzleCreationProblems}),
+							state,
+							{P: puzzleCreationProblems}),
 						$elm$core$Platform$Cmd$none);
 				}
 			case 4:
 				var typing = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
+						state,
 						{
 							B: $elm$core$String$toUpper(typing)
 						}),
@@ -6541,7 +6566,7 @@ var $author$project$Main$updateState = F4(
 						A3(
 							$author$project$Main$addAttempt,
 							_Utils_update(
-								model,
+								state,
 								{F: _List_Nil}),
 							puzzle,
 							newGuess),
@@ -6550,7 +6575,7 @@ var $author$project$Main$updateState = F4(
 					var guessProblems = _v3.a;
 					return _Utils_Tuple2(
 						_Utils_update(
-							model,
+							state,
 							{A: _List_Nil, F: guessProblems}),
 						$elm$core$Platform$Cmd$none);
 				}
@@ -6558,25 +6583,25 @@ var $author$project$Main$updateState = F4(
 				var attempt = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
-						{j: attempt}),
+						state,
+						{i: attempt}),
 					$elm$core$Platform$Cmd$none);
 			case 8:
 				var attempt = msg.a;
 				return _Utils_Tuple2(
-					A2($author$project$Main$deleteAttempt, attempt, model),
+					A2($author$project$Main$deleteAttempt, attempt, state),
 					$elm$core$Platform$Cmd$none);
 			case 9:
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
-						{L: true}),
+						state,
+						{M: true}),
 					$elm$core$Platform$Cmd$none);
 			case 7:
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
-						{j: model.N}),
+						state,
+						{i: state.O}),
 					$elm$core$Platform$Cmd$none);
 			case 3:
 				return _Utils_Tuple2(
@@ -6591,13 +6616,13 @@ var $author$project$Main$updateState = F4(
 				var solutions = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
-						model,
+						state,
 						{
-							M: $elm$core$Maybe$Just(solutions)
+							N: $elm$core$Maybe$Just(solutions)
 						}),
 					$elm$core$Platform$Cmd$none);
 			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$update = F2(
@@ -6605,17 +6630,22 @@ var $author$project$Main$update = F2(
 		if (!model.$) {
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		} else {
-			var defaultPuzzle = model.a;
-			var key = model.b;
-			var state = model.c;
-			var _v1 = A4($author$project$Main$updateState, defaultPuzzle, key, msg, state);
-			var newState = _v1.a;
-			var commands = _v1.b;
-			return _Utils_Tuple2(
-				A3($author$project$Main$DefaultPuzzleLoaded, defaultPuzzle, key, newState),
-				commands);
+			var loadedModel = model.a;
+			return A2(
+				$elm$core$Tuple$mapFirst,
+				function (newState) {
+					return $author$project$Main$DefaultPuzzleLoaded(
+						_Utils_update(
+							loadedModel,
+							{H: newState}));
+				},
+				A2($author$project$Main$updateState, msg, loadedModel));
 		}
 	});
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6647,7 +6677,7 @@ var $elm$html$Html$Events$on = F2(
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
 var $author$project$Main$keyHandlers = function (model) {
-	var _v0 = model.n;
+	var _v0 = model.o;
 	if (!_v0.$) {
 		return _List_fromArray(
 			[
@@ -6668,6 +6698,9 @@ var $author$project$Main$keyHandlers = function (model) {
 var $author$project$Main$EnableCheat = {$: 9};
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$core$String$concat = function (strings) {
+	return A2($elm$core$String$join, '', strings);
+};
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -6685,13 +6718,10 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$li = _VirtualDom_node('li');
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $elm$core$String$concat = function (strings) {
-	return A2($elm$core$String$join, '', strings);
+var $author$project$Nineagram$Guess$toString = function (_v0) {
+	var s = _v0;
+	return s;
 };
 var $author$project$Main$viewSolution = function (_v0) {
 	var first = _v0.a;
@@ -6709,17 +6739,23 @@ var $author$project$Main$viewSolution = function (_v0) {
 				')'
 			]));
 };
-var $author$project$Main$viewSolutions = A2(
-	$elm$core$Basics$composeL,
-	$elm$html$Html$ul(_List_Nil),
-	$elm$core$List$map(
+var $author$project$Main$viewSolutions = function (solutions) {
+	return A2(
+		$elm$html$Html$ul,
+		_List_Nil,
 		A2(
-			$elm$core$Basics$composeL,
-			A2(
-				$elm$core$Basics$composeL,
-				$elm$html$Html$li(_List_Nil),
-				$elm$core$List$singleton),
-			$author$project$Main$viewSolution)));
+			$elm$core$List$map,
+			function (sln) {
+				return A2(
+					$elm$html$Html$li,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$author$project$Main$viewSolution(sln)
+						]));
+			},
+			solutions));
+};
 var $author$project$Main$viewAllSolutions = function (model) {
 	var viewNoPuzzleYet = A2(
 		$elm$html$Html$div,
@@ -6774,10 +6810,15 @@ var $author$project$Main$viewAllSolutions = function (model) {
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text(
-					'The computer found ' + (A2($elm$core$Basics$composeL, $elm$core$String$fromInt, $elm$core$List$length)(computerSolutions) + ' solutions. ')),
+					A2($elm$core$Basics$composeL, $elm$html$Html$text, $elm$core$String$concat)(
+					_List_fromArray(
+						[
+							'The computer found ',
+							A2($elm$core$Basics$composeL, $elm$core$String$fromInt, $elm$core$List$length)(computerSolutions),
+							' solutions.'
+						])),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					(!model.L) ? A2(
+					model.M ? $author$project$Main$viewSolutions(computerSolutions) : A2(
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
@@ -6787,10 +6828,10 @@ var $author$project$Main$viewAllSolutions = function (model) {
 					_List_fromArray(
 						[
 							$elm$html$Html$text('Show me!')
-						])) : $author$project$Main$viewSolutions(computerSolutions)
+						]))
 				]));
 	};
-	var _v0 = _Utils_Tuple2(model.n, model.M);
+	var _v0 = _Utils_Tuple2(model.o, model.N);
 	if (_v0.a.$ === 1) {
 		var _v1 = _v0.a;
 		return viewNoPuzzleYet;
@@ -6811,23 +6852,7 @@ var $author$project$Main$SelectAttempt = function (a) {
 	return {$: 6, a: a};
 };
 var $elm$html$Html$b = _VirtualDom_node('b');
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$html$Html$i = _VirtualDom_node('i');
-var $elm$core$Result$map = F2(
-	function (func, ra) {
-		if (!ra.$) {
-			var a = ra.a;
-			return $elm$core$Result$Ok(
-				func(a));
-		} else {
-			var e = ra.a;
-			return $elm$core$Result$Err(e);
-		}
-	});
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 1, a: a};
 };
@@ -7085,15 +7110,6 @@ var $elm$html$Html$Events$onSubmit = function (msg) {
 };
 var $elm$html$Html$Attributes$spellcheck = $elm$html$Html$Attributes$boolProperty('spellcheck');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (!maybeValue.$) {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $elm$core$String$cons = _String_cons;
 var $elm$core$String$fromChar = function (_char) {
 	return A2($elm$core$String$cons, _char, '');
@@ -7121,36 +7137,48 @@ var $author$project$Main$viewGuessForPuzzleProblems = function (problems) {
 				$elm$html$Html$Attributes$class('guessForPuzzleProblem')
 			]),
 		A2(
-			$elm$core$List$filterMap,
-			A2(
-				$elm$core$Basics$composeR,
-				$author$project$Main$viewGuessForPuzzleProblem,
-				$elm$core$Maybe$andThen(
-					A2(
-						$elm$core$Basics$composeL,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Maybe$Just,
-							$elm$html$Html$div(_List_Nil)),
-						$elm$core$List$singleton))),
-			problems));
+			$elm$core$List$map,
+			function (html) {
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[html]));
+			},
+			A2($elm$core$List$filterMap, $author$project$Main$viewGuessForPuzzleProblem, problems)));
 };
-var $author$project$Main$viewGuessProblems = function (problems) {
-	var displayProblem = function (problem) {
-		if (!problem.$) {
-			if (!problem.a) {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var n = problem.a;
-				return $elm$core$Maybe$Just(
-					'That\'s only ' + ($elm$core$String$fromInt(n) + ' letters. Your words should have exactly five letters.'));
-			}
+var $author$project$Main$viewGuessProblem = function (problem) {
+	if (!problem.$) {
+		if (!problem.a) {
+			return $elm$core$Maybe$Nothing;
 		} else {
 			var n = problem.a;
-			return $elm$core$Maybe$Just(
-				'That\'s ' + ($elm$core$String$fromInt(n) + ' letters. Your words should have exactly five letters.'));
+			return A2(
+				$elm$core$Basics$composeL,
+				A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$html$Html$text),
+				$elm$core$String$concat)(
+				_List_fromArray(
+					[
+						'That\'s only ',
+						$elm$core$String$fromInt(n),
+						' letters. Your words should have exactly five letters.'
+					]));
 		}
-	};
+	} else {
+		var n = problem.a;
+		return A2(
+			$elm$core$Basics$composeL,
+			A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$html$Html$text),
+			$elm$core$String$concat)(
+			_List_fromArray(
+				[
+					'That\'s ',
+					$elm$core$String$fromInt(n),
+					' letters. Your words should have exactly five letters.'
+				]));
+	}
+};
+var $author$project$Main$viewGuessProblems = function (problems) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7159,16 +7187,14 @@ var $author$project$Main$viewGuessProblems = function (problems) {
 			]),
 		A2(
 			$elm$core$List$map,
-			function (message) {
+			function (html) {
 				return A2(
 					$elm$html$Html$div,
 					_List_Nil,
 					_List_fromArray(
-						[
-							$elm$html$Html$text(message)
-						]));
+						[html]));
 			},
-			A2($elm$core$List$filterMap, displayProblem, problems)));
+			A2($elm$core$List$filterMap, $author$project$Main$viewGuessProblem, problems)));
 };
 var $author$project$Main$viewGuessing = F2(
 	function (state, puzzle) {
@@ -7209,7 +7235,7 @@ var $author$project$Main$viewGuessing = F2(
 							$elm$html$Html$Attributes$autocomplete(false),
 							$elm$html$Html$Attributes$spellcheck(false),
 							$elm$html$Html$Attributes$disabled(
-							_Utils_eq(state.n, $elm$core$Maybe$Nothing)),
+							_Utils_eq(state.o, $elm$core$Maybe$Nothing)),
 							$elm$html$Html$Attributes$value(state.B),
 							$elm$html$Html$Events$onInput($author$project$Main$TypingGuess)
 						]),
@@ -7712,6 +7738,29 @@ var $author$project$Main$viewNineagramOneGuess = F2(
 						]))
 				]));
 	});
+var $author$project$Main$letterbox = function (_v0) {
+	var placeholder = _v0.l;
+	var value = _v0.m;
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('letterbox')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('text'),
+						$elm$html$Html$Attributes$class('letter'),
+						$elm$html$Html$Attributes$placeholder(placeholder),
+						$elm$html$Html$Attributes$value(value)
+					]),
+				_List_Nil)
+			]));
+};
 var $author$project$Main$viewNineagramTwoGuesses = F3(
 	function (_v0, firstGuess, secondGuess) {
 		var secondGuessLetter = function (n) {
@@ -7750,199 +7799,55 @@ var $author$project$Main$viewNineagramTwoGuesses = F3(
 				]),
 			_List_fromArray(
 				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(1)),
-									$elm$html$Html$Attributes$value(
-									firstGuessLetter(1))
-								]),
-							_List_Nil)
-						])),
+					$author$project$Main$letterbox(
+					{
+						l: letter(1),
+						m: firstGuessLetter(1)
+					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(2)),
-									$elm$html$Html$Attributes$value(
-									firstGuessLetter(2))
-								]),
-							_List_Nil)
-						])),
+					$author$project$Main$letterbox(
+					{
+						l: letter(2),
+						m: firstGuessLetter(2)
+					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(6)),
-									$elm$html$Html$Attributes$value(
-									secondGuessLetter(1))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(7)),
-									$elm$html$Html$Attributes$value(
-									secondGuessLetter(2))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(3)),
-									$elm$html$Html$Attributes$value(
-									secondGuessLetter(3))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(8)),
-									$elm$html$Html$Attributes$value(
-									secondGuessLetter(4))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(9)),
-									$elm$html$Html$Attributes$value(
-									secondGuessLetter(5))
-								]),
-							_List_Nil)
-						])),
+					$author$project$Main$letterbox(
+					{
+						l: letter(6),
+						m: secondGuessLetter(1)
+					}),
+					$author$project$Main$letterbox(
+					{
+						l: letter(7),
+						m: secondGuessLetter(2)
+					}),
+					$author$project$Main$letterbox(
+					{
+						l: letter(3),
+						m: secondGuessLetter(3)
+					}),
+					$author$project$Main$letterbox(
+					{
+						l: letter(8),
+						m: secondGuessLetter(4)
+					}),
+					$author$project$Main$letterbox(
+					{
+						l: letter(9),
+						m: secondGuessLetter(5)
+					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(4)),
-									$elm$html$Html$Attributes$value(
-									firstGuessLetter(4))
-								]),
-							_List_Nil)
-						])),
+					$author$project$Main$letterbox(
+					{
+						l: letter(4),
+						m: firstGuessLetter(4)
+					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(5)),
-									$elm$html$Html$Attributes$value(
-									firstGuessLetter(5))
-								]),
-							_List_Nil)
-						]))
+					$author$project$Main$letterbox(
+					{
+						l: letter(5),
+						m: firstGuessLetter(5)
+					})
 				]));
 	});
 var $author$project$Main$viewNineagram = F2(
@@ -7963,27 +7868,51 @@ var $author$project$Main$Reset = {$: 3};
 var $author$project$Main$TypedPuzzleLetters = function (a) {
 	return {$: 1, a: a};
 };
-var $author$project$Main$viewCreationProblems = function (problems) {
-	var displayProblem = function (problem) {
-		switch (problem.$) {
-			case 1:
-				if (!problem.a) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var n = problem.a;
-					return $elm$core$Maybe$Just(
-						'That\'s only ' + ($elm$core$String$fromInt(n) + ' letters. A puzzle should have exactly nine letters.'));
-				}
-			case 2:
+var $author$project$Main$viewCreationProblem = function (problem) {
+	switch (problem.$) {
+		case 1:
+			if (!problem.a) {
+				return $elm$core$Maybe$Nothing;
+			} else {
 				var n = problem.a;
-				return $elm$core$Maybe$Just(
-					'That\'s ' + ($elm$core$String$fromInt(n) + ' letters. A puzzle should have exactly nine letters.'));
-			default:
-				var first = problem.a;
-				return $elm$core$Maybe$Just(
-					'That\'s got a \'' + ($elm$core$String$fromChar(first) + '\'. A puzzle should only have letters.'));
-		}
-	};
+				return A2(
+					$elm$core$Basics$composeL,
+					A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$html$Html$text),
+					$elm$core$String$concat)(
+					_List_fromArray(
+						[
+							'That\'s only ',
+							$elm$core$String$fromInt(n),
+							' letters. A puzzle should have exactly nine letters.'
+						]));
+			}
+		case 2:
+			var n = problem.a;
+			return A2(
+				$elm$core$Basics$composeL,
+				A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$html$Html$text),
+				$elm$core$String$concat)(
+				_List_fromArray(
+					[
+						'That\'s ',
+						$elm$core$String$fromInt(n),
+						' letters. A puzzle should have exactly nine letters.'
+					]));
+		default:
+			var firstNonAlpha = problem.a;
+			return A2(
+				$elm$core$Basics$composeL,
+				A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$html$Html$text),
+				$elm$core$String$concat)(
+				_List_fromArray(
+					[
+						'That\'s got a \'',
+						$elm$core$String$fromChar(firstNonAlpha),
+						'\'. A puzzle should only have letters.'
+					]));
+	}
+};
+var $author$project$Main$viewCreationProblems = function (problems) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7992,16 +7921,14 @@ var $author$project$Main$viewCreationProblems = function (problems) {
 			]),
 		A2(
 			$elm$core$List$map,
-			function (message) {
+			function (html) {
 				return A2(
 					$elm$html$Html$div,
 					_List_Nil,
 					_List_fromArray(
-						[
-							$elm$html$Html$text(message)
-						]));
+						[html]));
 			},
-			A2($elm$core$List$filterMap, displayProblem, problems)));
+			A2($elm$core$List$filterMap, $author$project$Main$viewCreationProblem, problems)));
 };
 var $author$project$Main$viewPuzzleCreation = function (model) {
 	return A2(
@@ -8050,7 +7977,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 								$elm$html$Html$Attributes$autocomplete(false),
 								$elm$html$Html$Attributes$value(model.v),
 								$elm$html$Html$Attributes$disabled(
-								!_Utils_eq(model.n, $elm$core$Maybe$Nothing)),
+								!_Utils_eq(model.o, $elm$core$Maybe$Nothing)),
 								$elm$html$Html$Events$onInput($author$project$Main$TypedPuzzleLetters)
 							]),
 						_List_Nil),
@@ -8062,7 +7989,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$author$project$Main$viewCreationProblems(model.O)
+								$author$project$Main$viewCreationProblems(model.P)
 							]))
 					])),
 				A2(
@@ -8075,7 +8002,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$disabled(
-								!_Utils_eq(model.n, $elm$core$Maybe$Nothing))
+								!_Utils_eq(model.o, $elm$core$Maybe$Nothing))
 							]),
 						_List_fromArray(
 							[
@@ -8097,7 +8024,7 @@ var $author$project$Main$viewPuzzleCreation = function (model) {
 };
 var $author$project$Main$viewState = F2(
 	function (defaultPuzzle, model) {
-		var puzzle = A2($elm$core$Maybe$withDefault, defaultPuzzle, model.n);
+		var puzzle = A2($elm$core$Maybe$withDefault, defaultPuzzle, model.o);
 		return A2(
 			$elm$html$Html$div,
 			A2(
@@ -8107,7 +8034,7 @@ var $author$project$Main$viewState = F2(
 			_List_fromArray(
 				[
 					$author$project$Main$viewPuzzleCreation(model),
-					A2($author$project$Main$viewNineagram, puzzle, model.j),
+					A2($author$project$Main$viewNineagram, puzzle, model.i),
 					A2($author$project$Main$viewGuessing, model, puzzle),
 					A2($author$project$Main$viewAttempts, model, puzzle),
 					$author$project$Main$viewAllSolutions(model),
@@ -8122,38 +8049,36 @@ var $author$project$Main$viewState = F2(
 	});
 var $author$project$Main$view = function (model) {
 	return {
-		aw: _List_fromArray(
-			[
-				function () {
+		az: $elm$core$List$singleton(
+			function () {
 				if (!model.$) {
 					return $elm$html$Html$text('Sorry, something went wrong.');
 				} else {
-					var defaultPuzzle = model.a;
-					var state = model.c;
+					var defaultPuzzle = model.a.Q;
+					var state = model.a.H;
 					return A2($author$project$Main$viewState, defaultPuzzle, state);
 				}
-			}()
-			]),
-		aL: 'Nineagram Solver'
+			}()),
+		aO: 'Nineagram Solver'
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$application(
 	{
-		aD: F3(
+		aG: F3(
 			function (_v0, url, key) {
 				return A2($author$project$Main$init, url, key);
 			}),
-		aF: function (_v1) {
+		aI: function (_v1) {
 			return $author$project$Main$NoOp;
 		},
-		aG: function (_v2) {
+		aJ: function (_v2) {
 			return $author$project$Main$NoOp;
 		},
-		aK: function (_v3) {
+		aN: function (_v3) {
 			return $elm$core$Platform$Sub$none;
 		},
-		aM: $author$project$Main$update,
-		aN: $author$project$Main$view
+		aP: $author$project$Main$update,
+		aQ: $author$project$Main$view
 	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));

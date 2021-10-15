@@ -2,6 +2,8 @@ module Nineagram.Guess exposing
     ( Guess
     , Problem(..)
     , fromString
+    , getMiddleLetter
+    , toList
     , toString
     )
 
@@ -22,7 +24,8 @@ type Problem
 fromString : String -> Result (List Problem) Guess
 fromString guess =
     let
-        length = String.length guess
+        length =
+            String.length guess
     in
     if length < 5 then
         Err [ TooShort length ]
@@ -31,9 +34,25 @@ fromString guess =
         Err [ TooLong length ]
 
     else
-        Ok <| Guess <| String.toLower guess
+        (Ok << Guess) (String.toLower guess)
 
 
 toString : Guess -> String
 toString (Guess s) =
     s
+
+toList : Guess -> List Char
+toList (Guess s) =
+    String.toList s
+
+
+getMiddleLetter : Guess -> Char
+getMiddleLetter (Guess s) =
+    case
+        (String.slice 2 3 >> String.toList) s
+    of
+        [ letter ] ->
+            letter
+
+        _ ->
+            ' '
