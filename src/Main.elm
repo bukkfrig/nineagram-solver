@@ -40,7 +40,7 @@ own word list.
 main : Program () Model Msg
 main =
     Browser.application
-        { init = \() url key -> init url key
+        { init = init
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
@@ -101,8 +101,8 @@ update msg model =
                 |> Tuple.mapFirst (\newState -> DefaultPuzzleLoaded { loadedModel | state = newState })
 
 
-init : Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init url key =
+init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init _ url key =
     case Nineagram.fromString "GRNAMNIEA" of
         Ok defaultPuzzle ->
             ( DefaultPuzzleLoaded
@@ -230,22 +230,18 @@ updateState msg { navigationKey, state } =
 startSolving : Browser.Navigation.Key -> NineagramPuzzle -> ( State, Cmd Msg )
 startSolving key puzzle =
     let
-        newModel =
-            { initState
-                | puzzle = Just puzzle
-                , letters =
-                    Nineagram.getLetters puzzle
-                        |> String.fromList
-                        |> String.toUpper
-            }
+        letters =
+            (String.fromList >> String.toUpper) (Nineagram.getLetters puzzle)
     in
-    ( newModel
+    ( { initState
+        | puzzle = Just puzzle
+        , letters = letters
+      }
     , Cmd.batch
         [ focus "guess"
-        , solve (\solutions -> ComputerSolved solutions)
-            puzzle
+        , solve ComputerSolved puzzle
         , Browser.Navigation.pushUrl key
-            (Url.Builder.relative [] [ Url.Builder.string "letters" newModel.letters ])
+            (Url.Builder.relative [] [ Url.Builder.string "letters" letters ])
         ]
     )
 
@@ -302,17 +298,15 @@ addAttempt model puzzle guess =
             { model
                 | guessForPuzzleProblems = []
                 , attempts = newAttempt :: model.attempts
-                , currentAttempt = newAttempt
                 , guessInput = ""
+                , currentAttempt = newAttempt
             }
 
 
 deleteAttempt : Attempt -> State -> State
 deleteAttempt attempt state =
     { state
-        | attempts =
-            List.filter (\a -> a /= attempt)
-                state.attempts
+        | attempts = List.filter (\a -> a /= attempt) state.attempts
         , currentAttempt =
             if state.currentAttempt == attempt then
                 state.defaultAttempt
@@ -576,7 +570,7 @@ viewNineagramOneGuess puzzle guess =
                     |> (List.take n >> List.drop (n - 1))
                 )
     in
-    div [ Html.Attributes.class "nineagram", Html.Attributes.class "solution" ]
+    div [ Html.Attributes.class "nineagram" ]
         [ letterbox { placeholder = "", value = guessed 1 }
         , br [] []
         , letterbox { placeholder = "", value = guessed 2 }
@@ -702,16 +696,11 @@ viewGuessForPuzzleProblems problems =
 
 
 viewGuessForPuzzleProblem : Nineagram.GuessProblem -> Maybe (Html msg)
-viewGuessForPuzzleProblem problem =
-    case problem of
-        Nineagram.LetterNotFound letter ->
-            (Just << text << String.concat)
-                [ "There aren't enough "
-                , "'"
-                , (String.toUpper << String.fromChar) letter
-                , "'"
-                , " for that word."
-                ]
+viewGuessForPuzzleProblem (Nineagram.LetterNotFound letter) =
+    (Just << text)
+        ((\missingLetter -> "There aren't enough '" ++ missingLetter ++ "' for that word.")
+            ((String.toUpper << String.fromChar) letter)
+        )
 
 
 
@@ -720,7 +709,8 @@ viewGuessForPuzzleProblem problem =
 
 viewAttempts : State -> NineagramPuzzle -> Html Msg
 viewAttempts model puzzle =
-    div [ Html.Attributes.class "attempts" ] <| List.map (viewAttempt puzzle) model.attempts
+    div [ Html.Attributes.class "attempts" ]
+        (List.map (viewAttempt puzzle) model.attempts)
 
 
 viewAttempt : NineagramPuzzle -> Attempt -> Html Msg
@@ -732,21 +722,14 @@ viewAttempt puzzle attempt =
                 , Html.Attributes.class "noguesses"
                 , Html.Events.onClick (SelectAttempt attempt)
                 ]
-                [ i []
-                    [ text "New word" ]
-                ]
+                [ i [] [ text "New word" ] ]
 
         OneGuess guess ->
             let
                 remaining =
-                    guess
-                        |> Nineagram.remainingLetters puzzle
-                        >> Result.map String.fromList
+                    Nineagram.remainingLetters puzzle guess
+                        |> Result.map String.fromList
                         |> Result.withDefault ""
-
-                middleLetter =
-                    (Guess.toString >> String.left 3 >> String.right 1)
-                        guess
             in
             div
                 [ Html.Attributes.class "attempt"
@@ -759,8 +742,8 @@ viewAttempt puzzle attempt =
                     " - "
                 , (text << String.toUpper)
                     (String.left 2 remaining)
-                , (b [] << List.singleton << text << String.toUpper)
-                    middleLetter
+                , (b [] << List.singleton << text << String.toUpper << String.fromChar)
+                    (Guess.getMiddleLetter guess)
                 , (text << String.toUpper)
                     (String.right 2 remaining)
                 , button [ onClickStopPropagation (DeleteAttempt attempt) ]
@@ -803,11 +786,8 @@ viewAllSolutions model =
     let
         viewComputerSolved computerSolutions =
             div [ Html.Attributes.class "cheat" ]
-                [ (text << String.concat)
-                    [ "The computer found "
-                    , (String.fromInt << List.length) computerSolutions
-                    , " solutions."
-                    ]
+                [ (text << (\solutionCount -> "The computer found " ++ solutionCount ++ "solutions."))
+                    ((String.fromInt << List.length) computerSolutions)
                 , br [] []
                 , if model.cheat then
                     viewSolutions computerSolutions
@@ -862,13 +842,8 @@ viewSolutions solutions =
 -}
 viewSolution : ComputerSolution -> Html msg
 viewSolution (ComputerSolution first matches) =
-    (text << String.concat)
-        [ Guess.toString first
-        , " "
-        , "("
-        , String.join ", "
-            (List.map Guess.toString
-                matches
-            )
-        , ")"
-        ]
+    text
+        ((\word words -> word ++ " (" ++ words ++ ")")
+            (Guess.toString first)
+            ((String.join ", " << List.map Guess.toString) matches)
+        )
