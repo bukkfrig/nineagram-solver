@@ -122,15 +122,15 @@ removeLettersFrom input lettersToRemove =
 
 
 removeLetterFrom : List Char -> Char -> Result GuessProblem (List Char)
-removeLetterFrom input letter =
+removeLetterFrom input letterToRemove =
     case input of
         [] ->
-            Err (LetterNotFound letter)
+            Err (LetterNotFound letterToRemove)
 
         first :: rest ->
-            if first == letter then
+            if first == letterToRemove then
                 Ok rest
 
             else
-                removeLetterFrom rest letter
-                    |> Result.map ((::) first)
+                removeLetterFrom rest letterToRemove
+                    |> Result.map (\remaining -> first :: remaining)

@@ -41,6 +41,7 @@ toString : Guess -> String
 toString (Guess s) =
     s
 
+
 toList : Guess -> List Char
 toList (Guess s) =
     String.toList s

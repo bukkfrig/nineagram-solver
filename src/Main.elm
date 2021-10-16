@@ -538,69 +538,58 @@ viewNineagramNoGuesses : NineagramPuzzle -> Html Msg
 viewNineagramNoGuesses puzzle =
     let
         letter n =
-            Nineagram.getLetters puzzle
-                |> List.take n
-                |> List.drop (n - 1)
-                |> String.fromList
-                |> String.toUpper
-
-        guess _ =
-            ""
+            (String.fromList >> String.toUpper)
+                (Nineagram.getLetters puzzle
+                    |> (List.take n >> List.drop (n - 1))
+                )
     in
     div [ Html.Attributes.class "nineagram" ]
-        [ div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 1), Html.Attributes.value (guess 1) ] [] ]
+        [ letterbox { placeholder = letter 1, value = "" }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 2), Html.Attributes.value (guess 2) ] [] ]
+        , letterbox { placeholder = letter 2, value = "" }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 6), Html.Attributes.value (guess 6) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 7), Html.Attributes.value (guess 7) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 3), Html.Attributes.value (guess 3) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 8), Html.Attributes.value (guess 8) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 9), Html.Attributes.value (guess 9) ] [] ]
+        , letterbox { placeholder = letter 6, value = "" }
+        , letterbox { placeholder = letter 7, value = "" }
+        , letterbox { placeholder = letter 3, value = "" }
+        , letterbox { placeholder = letter 8, value = "" }
+        , letterbox { placeholder = letter 9, value = "" }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 4), Html.Attributes.value (guess 4) ] [] ]
+        , letterbox { placeholder = letter 4, value = "" }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 5), Html.Attributes.value (guess 5) ] [] ]
+        , letterbox { placeholder = letter 5, value = "" }
         ]
 
 
 viewNineagramOneGuess : NineagramPuzzle -> Guess -> Html Msg
 viewNineagramOneGuess puzzle guess =
     let
-        remain =
-            Nineagram.remainingLetters puzzle guess
-                |> Result.withDefault []
+        remain n =
+            (String.fromList >> String.toUpper)
+                (Nineagram.remainingLetters puzzle guess
+                    |> Result.map (List.take n >> List.drop (n - 1))
+                    |> Result.withDefault []
+                )
 
-        letter n =
-            (List.repeat (String.length (Guess.toString guess)) ' ' ++ remain)
-                |> List.take n
-                |> List.drop (n - 1)
-                |> String.fromList
-                |> String.toUpper
-
-        guessLetter n =
-            guess
-                |> Guess.toString
-                |> String.toList
-                |> List.take n
-                |> List.drop (n - 1)
-                |> String.fromList
-                |> String.toUpper
+        guessed n =
+            (String.fromList >> String.toUpper)
+                ((Guess.toString >> String.toList) guess
+                    |> (List.take n >> List.drop (n - 1))
+                )
     in
-    div [ Html.Attributes.class "nineagram" ]
-        [ div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 1), Html.Attributes.value (guessLetter 1) ] [] ]
+    div [ Html.Attributes.class "nineagram", Html.Attributes.class "solution" ]
+        [ letterbox { placeholder = "", value = guessed 1 }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 2), Html.Attributes.value (guessLetter 2) ] [] ]
+        , letterbox { placeholder = "", value = guessed 2 }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 6), Html.Attributes.value (guessLetter 6) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 7), Html.Attributes.value (guessLetter 7) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 3), Html.Attributes.value (guessLetter 3) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 8), Html.Attributes.value (guessLetter 8) ] [] ]
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 9), Html.Attributes.value (guessLetter 9) ] [] ]
+        , letterbox { placeholder = remain 1, value = "" }
+        , letterbox { placeholder = remain 2, value = "" }
+        , letterbox { placeholder = "", value = guessed 3 }
+        , letterbox { placeholder = remain 3, value = "" }
+        , letterbox { placeholder = remain 4, value = "" }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 4), Html.Attributes.value (guessLetter 4) ] [] ]
+        , letterbox { placeholder = "", value = guessed 4 }
         , br [] []
-        , div [ Html.Attributes.class "letterbox" ] [ input [ Html.Attributes.type_ "text", Html.Attributes.class "letter", Html.Attributes.placeholder (letter 5), Html.Attributes.value (guessLetter 5) ] [] ]
+        , letterbox { placeholder = "", value = guessed 5 }
         ]
 
 
@@ -618,43 +607,28 @@ letterbox { placeholder, value } =
 
 
 viewNineagramTwoGuesses : NineagramPuzzle -> Guess -> Guess -> Html Msg
-viewNineagramTwoGuesses _ firstGuess secondGuess =
+viewNineagramTwoGuesses _ first second =
     let
-        letter _ =
-            ""
-
-        firstGuessLetter n =
-            firstGuess
-                |> Guess.toString
-                |> String.toList
-                |> List.take n
-                |> List.drop (n - 1)
-                |> String.fromList
-                |> String.toUpper
-
-        secondGuessLetter n =
-            secondGuess
-                |> Guess.toString
-                |> String.toList
-                |> List.take n
-                |> List.drop (n - 1)
-                |> String.fromList
-                |> String.toUpper
+        letter guess n =
+            (String.fromList >> String.toUpper)
+                ((Guess.toString >> String.toList) guess
+                    |> (List.take n >> List.drop (n - 1))
+                )
     in
     div [ Html.Attributes.class "nineagram", Html.Attributes.class "solution" ]
-        [ letterbox { placeholder = letter 1, value = firstGuessLetter 1 }
+        [ letterbox { placeholder = "", value = letter first 1 }
         , br [] []
-        , letterbox { placeholder = letter 2, value = firstGuessLetter 2 }
+        , letterbox { placeholder = "", value = letter first 2 }
         , br [] []
-        , letterbox { placeholder = letter 6, value = secondGuessLetter 1 }
-        , letterbox { placeholder = letter 7, value = secondGuessLetter 2 }
-        , letterbox { placeholder = letter 3, value = secondGuessLetter 3 }
-        , letterbox { placeholder = letter 8, value = secondGuessLetter 4 }
-        , letterbox { placeholder = letter 9, value = secondGuessLetter 5 }
+        , letterbox { placeholder = "", value = letter second 1 }
+        , letterbox { placeholder = "", value = letter second 2 }
+        , letterbox { placeholder = "", value = letter second 3 }
+        , letterbox { placeholder = "", value = letter second 4 }
+        , letterbox { placeholder = "", value = letter second 5 }
         , br [] []
-        , letterbox { placeholder = letter 4, value = firstGuessLetter 4 }
+        , letterbox { placeholder = "", value = letter first 4 }
         , br [] []
-        , letterbox { placeholder = letter 5, value = firstGuessLetter 5 }
+        , letterbox { placeholder = "", value = letter first 5 }
         ]
 
 

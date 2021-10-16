@@ -4734,25 +4734,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.a) {
+		if (!builder.c) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.b),
+				$elm$core$Elm$JsArray$length(builder.d),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.b);
+				builder.d);
 		} else {
-			var treeLen = builder.a * $elm$core$Array$branchFactor;
+			var treeLen = builder.c * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.c) : builder.c;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.a);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.e) : builder.e;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.c);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.b) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.d) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.b);
+				builder.d);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4765,7 +4765,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{c: nodeList, a: (len / $elm$core$Array$branchFactor) | 0, b: tail});
+					{e: nodeList, c: (len / $elm$core$Array$branchFactor) | 0, d: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -5240,11 +5240,11 @@ var $author$project$Nineagram$fromString = A2(
 	$elm$core$String$trim,
 	A2($elm$core$Basics$composeR, $elm$core$String$toList, $author$project$Nineagram$fromCharList));
 var $author$project$Main$NoGuesses = {$: 0};
-var $author$project$Main$initState = {t: _List_Nil, M: false, N: $elm$core$Maybe$Nothing, i: $author$project$Main$NoGuesses, O: $author$project$Main$NoGuesses, A: _List_Nil, B: '', F: _List_Nil, v: '', o: $elm$core$Maybe$Nothing, P: _List_Nil};
+var $author$project$Main$initState = {t: _List_Nil, M: false, N: $elm$core$Maybe$Nothing, k: $author$project$Main$NoGuesses, O: $author$project$Main$NoGuesses, A: _List_Nil, B: '', F: _List_Nil, v: '', o: $elm$core$Maybe$Nothing, P: _List_Nil};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
-		return {u: frag, w: params, s: unvisited, m: value, y: visited};
+		return {u: frag, w: params, s: unvisited, b: value, y: visited};
 	});
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -5256,10 +5256,10 @@ var $elm$url$Url$Parser$getFirstMatch = function (states) {
 			var rest = states.b;
 			var _v1 = state.s;
 			if (!_v1.b) {
-				return $elm$core$Maybe$Just(state.m);
+				return $elm$core$Maybe$Just(state.b);
 			} else {
 				if ((_v1.a === '') && (!_v1.b.b)) {
-					return $elm$core$Maybe$Just(state.m);
+					return $elm$core$Maybe$Just(state.b);
 				} else {
 					var $temp$states = rest;
 					states = $temp$states;
@@ -5884,7 +5884,7 @@ var $elm$url$Url$Parser$query = function (_v0) {
 		var unvisited = _v1.s;
 		var params = _v1.w;
 		var frag = _v1.u;
-		var value = _v1.m;
+		var value = _v1.b;
 		return _List_fromArray(
 			[
 				A5(
@@ -6061,16 +6061,18 @@ var $elm$core$Result$map = F2(
 		}
 	});
 var $author$project$Nineagram$removeLetterFrom = F2(
-	function (input, letter) {
+	function (input, letterToRemove) {
 		if (!input.b) {
-			return $elm$core$Result$Err(letter);
+			return $elm$core$Result$Err(letterToRemove);
 		} else {
 			var first = input.a;
 			var rest = input.b;
-			return _Utils_eq(first, letter) ? $elm$core$Result$Ok(rest) : A2(
+			return _Utils_eq(first, letterToRemove) ? $elm$core$Result$Ok(rest) : A2(
 				$elm$core$Result$map,
-				$elm$core$List$cons(first),
-				A2($author$project$Nineagram$removeLetterFrom, rest, letter));
+				function (remaining) {
+					return A2($elm$core$List$cons, first, remaining);
+				},
+				A2($author$project$Nineagram$removeLetterFrom, rest, letterToRemove));
 		}
 	});
 var $author$project$Nineagram$removeLettersFrom = F2(
@@ -6122,7 +6124,7 @@ var $author$project$Main$addAttempt = F3(
 				{A: problems});
 		} else {
 			var newAttempt = function () {
-				var _v1 = model.i;
+				var _v1 = model.k;
 				switch (_v1.$) {
 					case 0:
 						return $author$project$Main$OneGuess(guess);
@@ -6137,7 +6139,7 @@ var $author$project$Main$addAttempt = F3(
 				model,
 				{
 					t: A2($elm$core$List$cons, newAttempt, model.t),
-					i: newAttempt,
+					k: newAttempt,
 					A: _List_Nil,
 					B: ''
 				});
@@ -6161,7 +6163,7 @@ var $author$project$Main$deleteAttempt = F2(
 						return !_Utils_eq(a, attempt);
 					},
 					state.t),
-				i: _Utils_eq(state.i, attempt) ? state.O : state.i
+				k: _Utils_eq(state.k, attempt) ? state.O : state.k
 			});
 	});
 var $author$project$Nineagram$Guess$Guess = $elm$core$Basics$identity;
@@ -6584,7 +6586,7 @@ var $author$project$Main$updateState = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						state,
-						{i: attempt}),
+						{k: attempt}),
 					$elm$core$Platform$Cmd$none);
 			case 8:
 				var attempt = msg.a;
@@ -6601,7 +6603,7 @@ var $author$project$Main$updateState = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						state,
-						{i: state.O}),
+						{k: state.O}),
 					$elm$core$Platform$Cmd$none);
 			case 3:
 				return _Utils_Tuple2(
@@ -7261,486 +7263,9 @@ var $author$project$Main$viewGuessing = F2(
 				]));
 	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
-var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
-	var letter = function (n) {
-		return $elm$core$String$toUpper(
-			$elm$core$String$fromList(
-				A2(
-					$elm$core$List$drop,
-					n - 1,
-					A2(
-						$elm$core$List$take,
-						n,
-						$author$project$Nineagram$getLetters(puzzle)))));
-	};
-	var guess = function (_v0) {
-		return '';
-	};
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('nineagram')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(1)),
-								$elm$html$Html$Attributes$value(
-								guess(1))
-							]),
-						_List_Nil)
-					])),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(2)),
-								$elm$html$Html$Attributes$value(
-								guess(2))
-							]),
-						_List_Nil)
-					])),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(6)),
-								$elm$html$Html$Attributes$value(
-								guess(6))
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(7)),
-								$elm$html$Html$Attributes$value(
-								guess(7))
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(3)),
-								$elm$html$Html$Attributes$value(
-								guess(3))
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(8)),
-								$elm$html$Html$Attributes$value(
-								guess(8))
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(9)),
-								$elm$html$Html$Attributes$value(
-								guess(9))
-							]),
-						_List_Nil)
-					])),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(4)),
-								$elm$html$Html$Attributes$value(
-								guess(4))
-							]),
-						_List_Nil)
-					])),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('letterbox')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$class('letter'),
-								$elm$html$Html$Attributes$placeholder(
-								letter(5)),
-								$elm$html$Html$Attributes$value(
-								guess(5))
-							]),
-						_List_Nil)
-					]))
-			]));
-};
-var $elm$core$List$repeatHelp = F3(
-	function (result, n, value) {
-		repeatHelp:
-		while (true) {
-			if (n <= 0) {
-				return result;
-			} else {
-				var $temp$result = A2($elm$core$List$cons, value, result),
-					$temp$n = n - 1,
-					$temp$value = value;
-				result = $temp$result;
-				n = $temp$n;
-				value = $temp$value;
-				continue repeatHelp;
-			}
-		}
-	});
-var $elm$core$List$repeat = F2(
-	function (n, value) {
-		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
-	});
-var $author$project$Main$viewNineagramOneGuess = F2(
-	function (puzzle, guess) {
-		var remain = A2(
-			$elm$core$Result$withDefault,
-			_List_Nil,
-			A2($author$project$Nineagram$remainingLetters, puzzle, guess));
-		var letter = function (n) {
-			return $elm$core$String$toUpper(
-				$elm$core$String$fromList(
-					A2(
-						$elm$core$List$drop,
-						n - 1,
-						A2(
-							$elm$core$List$take,
-							n,
-							_Utils_ap(
-								A2(
-									$elm$core$List$repeat,
-									$elm$core$String$length(
-										$author$project$Nineagram$Guess$toString(guess)),
-									' '),
-								remain)))));
-		};
-		var guessLetter = function (n) {
-			return $elm$core$String$toUpper(
-				$elm$core$String$fromList(
-					A2(
-						$elm$core$List$drop,
-						n - 1,
-						A2(
-							$elm$core$List$take,
-							n,
-							$elm$core$String$toList(
-								$author$project$Nineagram$Guess$toString(guess))))));
-		};
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('nineagram')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(1)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(1))
-								]),
-							_List_Nil)
-						])),
-					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(2)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(2))
-								]),
-							_List_Nil)
-						])),
-					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(6)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(6))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(7)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(7))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(3)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(3))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(8)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(8))
-								]),
-							_List_Nil)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(9)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(9))
-								]),
-							_List_Nil)
-						])),
-					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(4)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(4))
-								]),
-							_List_Nil)
-						])),
-					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('letterbox')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$class('letter'),
-									$elm$html$Html$Attributes$placeholder(
-									letter(5)),
-									$elm$html$Html$Attributes$value(
-									guessLetter(5))
-								]),
-							_List_Nil)
-						]))
-				]));
-	});
 var $author$project$Main$letterbox = function (_v0) {
-	var placeholder = _v0.l;
-	var value = _v0.m;
+	var placeholder = _v0.a;
+	var value = _v0.b;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7761,34 +7286,96 @@ var $author$project$Main$letterbox = function (_v0) {
 				_List_Nil)
 			]));
 };
-var $author$project$Main$viewNineagramTwoGuesses = F3(
-	function (_v0, firstGuess, secondGuess) {
-		var secondGuessLetter = function (n) {
-			return $elm$core$String$toUpper(
-				$elm$core$String$fromList(
+var $author$project$Main$viewNineagramNoGuesses = function (puzzle) {
+	var letter = function (n) {
+		return A2($elm$core$Basics$composeR, $elm$core$String$fromList, $elm$core$String$toUpper)(
+			A3(
+				$elm$core$Basics$composeR,
+				$elm$core$List$take(n),
+				$elm$core$List$drop(n - 1),
+				$author$project$Nineagram$getLetters(puzzle)));
+	};
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('nineagram')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Main$letterbox(
+				{
+					a: letter(1),
+					b: ''
+				}),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				$author$project$Main$letterbox(
+				{
+					a: letter(2),
+					b: ''
+				}),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				$author$project$Main$letterbox(
+				{
+					a: letter(6),
+					b: ''
+				}),
+				$author$project$Main$letterbox(
+				{
+					a: letter(7),
+					b: ''
+				}),
+				$author$project$Main$letterbox(
+				{
+					a: letter(3),
+					b: ''
+				}),
+				$author$project$Main$letterbox(
+				{
+					a: letter(8),
+					b: ''
+				}),
+				$author$project$Main$letterbox(
+				{
+					a: letter(9),
+					b: ''
+				}),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				$author$project$Main$letterbox(
+				{
+					a: letter(4),
+					b: ''
+				}),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				$author$project$Main$letterbox(
+				{
+					a: letter(5),
+					b: ''
+				})
+			]));
+};
+var $author$project$Main$viewNineagramOneGuess = F2(
+	function (puzzle, guess) {
+		var remain = function (n) {
+			return A2($elm$core$Basics$composeR, $elm$core$String$fromList, $elm$core$String$toUpper)(
+				A2(
+					$elm$core$Result$withDefault,
+					_List_Nil,
 					A2(
-						$elm$core$List$drop,
-						n - 1,
+						$elm$core$Result$map,
 						A2(
-							$elm$core$List$take,
-							n,
-							$elm$core$String$toList(
-								$author$project$Nineagram$Guess$toString(secondGuess))))));
+							$elm$core$Basics$composeR,
+							$elm$core$List$take(n),
+							$elm$core$List$drop(n - 1)),
+						A2($author$project$Nineagram$remainingLetters, puzzle, guess))));
 		};
-		var letter = function (_v1) {
-			return '';
-		};
-		var firstGuessLetter = function (n) {
-			return $elm$core$String$toUpper(
-				$elm$core$String$fromList(
-					A2(
-						$elm$core$List$drop,
-						n - 1,
-						A2(
-							$elm$core$List$take,
-							n,
-							$elm$core$String$toList(
-								$author$project$Nineagram$Guess$toString(firstGuess))))));
+		var guessed = function (n) {
+			return A2($elm$core$Basics$composeR, $elm$core$String$fromList, $elm$core$String$toUpper)(
+				A3(
+					$elm$core$Basics$composeR,
+					$elm$core$List$take(n),
+					$elm$core$List$drop(n - 1),
+					A2($elm$core$Basics$composeR, $author$project$Nineagram$Guess$toString, $elm$core$String$toList)(guess)));
 		};
 		return A2(
 			$elm$html$Html$div,
@@ -7801,52 +7388,123 @@ var $author$project$Main$viewNineagramTwoGuesses = F3(
 				[
 					$author$project$Main$letterbox(
 					{
-						l: letter(1),
-						m: firstGuessLetter(1)
+						a: '',
+						b: guessed(1)
 					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
 					$author$project$Main$letterbox(
 					{
-						l: letter(2),
-						m: firstGuessLetter(2)
+						a: '',
+						b: guessed(2)
 					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
 					$author$project$Main$letterbox(
 					{
-						l: letter(6),
-						m: secondGuessLetter(1)
+						a: remain(1),
+						b: ''
 					}),
 					$author$project$Main$letterbox(
 					{
-						l: letter(7),
-						m: secondGuessLetter(2)
+						a: remain(2),
+						b: ''
 					}),
 					$author$project$Main$letterbox(
 					{
-						l: letter(3),
-						m: secondGuessLetter(3)
+						a: '',
+						b: guessed(3)
 					}),
 					$author$project$Main$letterbox(
 					{
-						l: letter(8),
-						m: secondGuessLetter(4)
+						a: remain(3),
+						b: ''
 					}),
 					$author$project$Main$letterbox(
 					{
-						l: letter(9),
-						m: secondGuessLetter(5)
-					}),
-					A2($elm$html$Html$br, _List_Nil, _List_Nil),
-					$author$project$Main$letterbox(
-					{
-						l: letter(4),
-						m: firstGuessLetter(4)
+						a: remain(4),
+						b: ''
 					}),
 					A2($elm$html$Html$br, _List_Nil, _List_Nil),
 					$author$project$Main$letterbox(
 					{
-						l: letter(5),
-						m: firstGuessLetter(5)
+						a: '',
+						b: guessed(4)
+					}),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: guessed(5)
+					})
+				]));
+	});
+var $author$project$Main$viewNineagramTwoGuesses = F3(
+	function (_v0, first, second) {
+		var letter = F2(
+			function (guess, n) {
+				return A2($elm$core$Basics$composeR, $elm$core$String$fromList, $elm$core$String$toUpper)(
+					A3(
+						$elm$core$Basics$composeR,
+						$elm$core$List$take(n),
+						$elm$core$List$drop(n - 1),
+						A2($elm$core$Basics$composeR, $author$project$Nineagram$Guess$toString, $elm$core$String$toList)(guess)));
+			});
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('nineagram'),
+					$elm$html$Html$Attributes$class('solution')
+				]),
+			_List_fromArray(
+				[
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, first, 1)
+					}),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, first, 2)
+					}),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, second, 1)
+					}),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, second, 2)
+					}),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, second, 3)
+					}),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, second, 4)
+					}),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, second, 5)
+					}),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, first, 4)
+					}),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					$author$project$Main$letterbox(
+					{
+						a: '',
+						b: A2(letter, first, 5)
 					})
 				]));
 	});
@@ -8034,7 +7692,7 @@ var $author$project$Main$viewState = F2(
 			_List_fromArray(
 				[
 					$author$project$Main$viewPuzzleCreation(model),
-					A2($author$project$Main$viewNineagram, puzzle, model.i),
+					A2($author$project$Main$viewNineagram, puzzle, model.k),
 					A2($author$project$Main$viewGuessing, model, puzzle),
 					A2($author$project$Main$viewAttempts, model, puzzle),
 					$author$project$Main$viewAllSolutions(model),
