@@ -786,7 +786,7 @@ viewAllSolutions model =
     let
         viewComputerSolved computerSolutions =
             div [ Html.Attributes.class "cheat" ]
-                [ (text << (\solutionCount -> "The computer found " ++ solutionCount ++ "solutions."))
+                [ (text << (\solutionCount -> "The computer found " ++ solutionCount ++ " solutions."))
                     ((String.fromInt << List.length) computerSolutions)
                 , br [] []
                 , if model.cheat then
