@@ -3,10 +3,10 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Browser.Navigation
-import Cheat
 import Html exposing (Html, b, br, button, div, h1, i, input, label, li, text, ul)
 import Html.Attributes
 import Html.Events
+import Http
 import Json.Decode
 import Nineagram exposing (NineagramPuzzle)
 import Nineagram.Guess as Guess exposing (Guess)
@@ -44,8 +44,8 @@ main =
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
-        , onUrlRequest = \_ -> NoOp
-        , onUrlChange = \_ -> NoOp
+        , onUrlRequest = UrlRequest
+        , onUrlChange = UrlChange
         }
 
 
@@ -63,6 +63,10 @@ type ComputerSolution
     = ComputerSolution Guess (List Guess)
 
 
+type SolvingProblem
+    = FetchProblem Http.Error
+
+
 type alias State =
     { letters : String
     , puzzleCreationProblems : List Nineagram.CreationProblem
@@ -74,7 +78,7 @@ type alias State =
     , defaultAttempt : Attempt
     , guessInput : String
     , cheat : Bool
-    , computerSolutions : Maybe (List ComputerSolution)
+    , computerSolutions : Maybe (Result SolvingProblem (List ComputerSolution))
     }
 
 
@@ -168,8 +172,9 @@ type Msg
     | SelectDefaultAttempt
     | DeleteAttempt Attempt
     | EnableCheat
-    | ComputerSolved (List ComputerSolution)
-    | NoOp
+    | ComputerSolved (Result SolvingProblem (List ComputerSolution))
+    | UrlRequest Browser.UrlRequest
+    | UrlChange Url.Url
 
 
 updateState : Msg -> LoadedModel -> ( State, Cmd Msg )
@@ -220,10 +225,13 @@ updateState msg { navigationKey, state } =
                 ]
             )
 
-        ComputerSolved solutions ->
-            ( { state | computerSolutions = Just solutions }, Cmd.none )
+        ComputerSolved result ->
+            ( { state | computerSolutions = Just result }, Cmd.none )
 
-        NoOp ->
+        UrlRequest _ ->
+            ( state, Cmd.none )
+
+        UrlChange _ ->
             ( state, Cmd.none )
 
 
@@ -251,10 +259,51 @@ focus id =
     Task.attempt (Focussed id) (Browser.Dom.focus id)
 
 
-solve : (List ComputerSolution -> msg) -> NineagramPuzzle -> Cmd msg
+fiveLetterWords : String -> List String
+fiveLetterWords str =
+    let
+        reduce string words =
+            case String.right 5 string of
+                "" ->
+                    words
+
+                word ->
+                    reduce (String.dropRight 5 string) (word :: words)
+    in
+    reduce str []
+
+
+solve : (Result SolvingProblem (List ComputerSolution) -> msg) -> NineagramPuzzle -> Cmd msg
 solve tagger puzzle =
-    Cheat.cheatWords
-        |> batchedFilterMap 200 (Result.toMaybe << Guess.fromString)
+    Http.task
+        { method = "GET"
+        , headers = []
+        , url = "cheat.txt"
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.BadUrl_ str ->
+                            Err (Http.BadUrl str)
+
+                        Http.Timeout_ ->
+                            Err Http.Timeout
+
+                        Http.NetworkError_ ->
+                            Err Http.NetworkError
+
+                        Http.BadStatus_ metadata _ ->
+                            Err (Http.BadStatus metadata.statusCode)
+
+                        Http.GoodStatus_ _ str ->
+                            Ok str
+                )
+        , timeout = Nothing
+        }
+        |> Task.map fiveLetterWords
+        |> Task.mapError FetchProblem
+        |> Task.andThen (batchedFilterMap 200 (Result.toMaybe << Guess.fromString))
         |> Task.andThen (batchedFilter 200 (\guess -> Nineagram.validateGuess puzzle guess == Ok ()))
         |> Task.andThen
             (\validGuesses ->
@@ -269,7 +318,7 @@ solve tagger puzzle =
                     )
                     validGuesses
             )
-        |> Task.perform tagger
+        |> Task.attempt tagger
 
 
 addAttempt : State -> NineagramPuzzle -> Guess -> State
@@ -322,7 +371,7 @@ deleteAttempt attempt state =
 --     Thanks jfmengels of Elm Slack #beginners for help with a bug.
 
 
-batchedFoldl : Int -> (a -> b -> b) -> b -> List a -> Task Never b
+batchedFoldl : Int -> (a -> b -> b) -> b -> List a -> Task x b
 batchedFoldl batchSize reducer ini list =
     let
         batchItems =
@@ -343,7 +392,7 @@ batchedFoldl batchSize reducer ini list =
                 |> Task.andThen (\_ -> batchedFoldl batchSize reducer workResult remainingItems)
 
 
-batchedFilter : Int -> (a -> Bool) -> List a -> Task Never (List a)
+batchedFilter : Int -> (a -> Bool) -> List a -> Task x (List a)
 batchedFilter batchSize fn list =
     batchedFoldl batchSize
         (\a acc ->
@@ -357,7 +406,7 @@ batchedFilter batchSize fn list =
         list
 
 
-batchedFilterMap : Int -> (a -> Maybe b) -> List a -> Task Never (List b)
+batchedFilterMap : Int -> (a -> Maybe b) -> List a -> Task x (List b)
 batchedFilterMap batchSize fn list =
     batchedFoldl batchSize
         (\a acc ->
@@ -784,18 +833,24 @@ alwaysStopPropagationOn event msg =
 viewAllSolutions : State -> Html Msg
 viewAllSolutions model =
     let
-        viewComputerSolved computerSolutions =
-            div [ Html.Attributes.class "cheat" ]
-                [ (text << (\solutionCount -> "The computer found " ++ solutionCount ++ " solutions."))
-                    ((String.fromInt << List.length) computerSolutions)
-                , br [] []
-                , if model.cheat then
-                    viewSolutions computerSolutions
+        viewComputerSolved result =
+            case result of
+                Ok computerSolutions ->
+                    div [ Html.Attributes.class "cheat" ]
+                        [ (text << (\solutionCount -> "The computer found " ++ solutionCount ++ " solutions."))
+                            ((String.fromInt << List.length) computerSolutions)
+                        , br [] []
+                        , if model.cheat then
+                            viewSolutions computerSolutions
 
-                  else
-                    button [ Html.Attributes.type_ "button", Html.Events.onClick EnableCheat ]
-                        [ text "Show me!" ]
-                ]
+                          else
+                            button [ Html.Attributes.type_ "button", Html.Events.onClick EnableCheat ]
+                                [ text "Show me!" ]
+                        ]
+
+                Err err ->
+                    div [ Html.Attributes.class "cheat" ]
+                        [ text "The computer was unable to solve." ]
 
         viewComputerStillSolving =
             div [ Html.Attributes.class "cheat" ]
@@ -826,8 +881,8 @@ viewAllSolutions model =
         ( Just _, Nothing ) ->
             viewComputerStillSolving
 
-        ( Just _, Just computerSolutions ) ->
-            viewComputerSolved computerSolutions
+        ( Just _, Just result ) ->
+            viewComputerSolved result
 
 
 viewSolutions : List ComputerSolution -> Html msg
